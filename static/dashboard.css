@@ -2179,3 +2179,93 @@ body.ttc-lang-en .ttc-bubble-box .kr-utterance {
   line-height: 1.45 !important;
 }
 
+/* Live Gemini API Loading Indicator Bubble & Spinner */
+.ttc-api-loading-row {
+  margin: 8px 0;
+  animation: ttcFadeInUp 0.22s ease-out;
+}
+
+.ttc-api-loading-bubble {
+  display: flex;
+   flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px dashed rgba(56, 189, 248, 0.55);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 58, 138, 0.28));
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.16);
+}
+
+.ttc-api-loading-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  font-weight: 700;
+  color: #e0f2fe;
+}
+
+.ttc-api-loading-sub {
+  font-size: 11px;
+  color: #93c5fd;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+}
+
+.ttc-spinner-ring {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(56, 189, 248, 0.28);
+  border-top-color: #38bdf8;
+  border-radius: 50%;
+  animation: ttcSpin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes ttcSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ttc-typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.ttc-typing-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #38bdf8;
+  animation: ttcDotBounce 1.2s infinite ease-in-out both;
+}
+
+.ttc-typing-dots span:nth-child(1) {
+  animation-delay: -0.24s;
+}
+.ttc-typing-dots span:nth-child(2) {
+  animation-delay: -0.12s;
+}
+.ttc-typing-dots span:nth-child(3) {
+  animation-delay: 0s;
+}
+
+@keyframes ttcDotBounce {
+  0%, 80%, 100% {
+    transform: scale(0.45);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+

@@ -1827,6 +1827,64 @@
     }
   }
 
+  function createApiLoadingBubble(nextTurn, mode = "critical") {
+    const incoming = nextTurn ? isIncomingCallerTurn(nextTurn, mode) : false;
+    const voiceMeta = nextTurn
+      ? getVoiceMeta(nextTurn)
+      : { tag: "AI 김순자 할머니 (대신 통화중)", roleLabel: "Ch2 AI 방패 오디오" };
+    const speakerTitle = nextTurn ? nextTurn.speakerSub : "AI 방패 · Gemini 4 Argon 실시간 응대 생성";
+    const badgeText = nextTurn ? nextTurn.badgeText : "AI 방패 · LIVE API";
+    const avatarEmoji = incoming ? "🚨" : voiceMeta.tag.includes("할머니") ? "👵" : "🛡️";
+    const avatarClass = incoming ? "avatar-caller-crit" : "avatar-ai-decoy";
+
+    const row = document.createElement("div");
+    row.className = `chat-row ${incoming ? "chat-row-left" : "chat-row-right"} ttc-api-loading-row`;
+    row.innerHTML = `
+      <div class="chat-avatar ${avatarClass}">${avatarEmoji}</div>
+      <div class="chat-col">
+        <div class="chat-meta-line">
+          <span class="badge badge-info">${incoming ? "📥 수신 채널" : "🛡️ AI 방패"} · ${badgeText}</span>
+          <span class="chat-speaker-name">${speakerTitle}</span>
+          <span class="badge" style="font-size:9.5px;opacity:0.9;">🎙️ ${voiceMeta.tag}</span>
+          <span class="chat-time" data-loading-timer>[실시간 API 대기 · 0.1s]</span>
+        </div>
+        <div class="ttc-api-loading-bubble">
+          <div class="ttc-api-loading-top">
+            <span class="ttc-spinner-ring"></span>
+            <span>실제 Gemini 4 Argon API 추론 중 · 법령·판례 대조 및 응답 생성 중입니다</span>
+            <span class="ttc-typing-dots"><span></span><span></span><span></span></span>
+          </div>
+          <div class="ttc-api-loading-sub">
+            <span>⚡ POST /api/argon/verify (1M Byte-0 Prefix Cache 조회 중)</span>
+            <span>·</span>
+            <span data-loading-elapsed>경과 시간: 0.1s</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const t0 = performance.now();
+    const timerEl = row.querySelector("[data-loading-timer]");
+    const elapsedEl = row.querySelector("[data-loading-elapsed]");
+    const intervalId = setInterval(() => {
+      if (!row.isConnected) {
+        clearInterval(intervalId);
+        return;
+      }
+      const sec = ((performance.now() - t0) / 1000).toFixed(1);
+      if (timerEl) timerEl.textContent = `[실시간 API 추론 중 · ${sec}s]`;
+      if (elapsedEl) elapsedEl.textContent = `경과 시간: ${sec}s`;
+    }, 100);
+    row._loadingIntervalId = intervalId;
+    return row;
+  }
+
+  function removeApiLoadingBubble(row) {
+    if (!row) return;
+    if (row._loadingIntervalId) clearInterval(row._loadingIntervalId);
+    if (row.parentNode) row.parentNode.removeChild(row);
+  }
+
   async function runSequentialLiveSimulation(mode, caseId = "CASE-01") {
     stopActiveSimulation();
     const runId = activeSimRunId;
@@ -1896,26 +1954,70 @@
 
       const krEl = row.querySelector(".kr-utterance");
       const enEl = row.querySelector(".en-telemetry");
+      const tsEl = row.querySelector(`#turn-ts-${i}`);
+      const proofSlot = row.querySelector(`#turn-proof-${i}`);
+
+      // Immediately show live API loading indicator inside the current bubble's proof slot
+      const apiStartMs = performance.now();
+      let apiDone = false;
+      if (proofSlot) {
+        proofSlot.style.display = "flex";
+        proofSlot.innerHTML = `
+          <span class="ttc-api-proof-pill" style="display:inline-flex;align-items:center;gap:6px;border-color:rgba(56,189,248,0.45);color:#bae6fd;">
+            <span class="ttc-spinner-ring" style="width:11px;height:11px;border-width:1.8px;"></span>
+            <span>실시간 <strong>Gemini 4 Argon API</strong> 검증 호출 중... (<code>POST /api/argon/verify</code>)</span>
+          </span>
+        `;
+      }
 
       // Call live backend /api/argon/verify via verifyTurn
       const verifyPromise =
         window.takeTheCallClient && typeof window.takeTheCallClient.verifyTurn === "function"
           ? window.takeTheCallClient
               .verifyTurn(turn.kr, prevInteractionId, null)
-              .catch(() => null)
-          : Promise.resolve(null);
+              .then((res) => {
+                apiDone = true;
+                return res;
+              })
+              .catch(() => {
+                apiDone = true;
+                return null;
+              })
+          : Promise.resolve(null).then(() => {
+              apiDone = true;
+              return null;
+            });
 
       await playTurnAudioAndType(turn, row, krEl, enEl, runId, mode);
       if (runId !== activeSimRunId) return;
 
+      // If the real Gemini API is still thinking after audio finished, show a clear loading bubble for the next turn (e.g., AI 김순자 할머니)
+      let pendingNextBubble = null;
+      const nextTurn = streamSpec.turns[i + 1] || null;
+      if (!apiDone) {
+        if (tsEl) {
+          const waitedSec = ((performance.now() - apiStartMs) / 1000).toFixed(1);
+          tsEl.textContent = `[${turn.ts}] · ⏳ 실시간 Gemini API 응답 대기 중 (${waitedSec}s...)`;
+        }
+        if (barText) {
+          barText.textContent = `[턴 ${i + 1}/${streamSpec.turns.length}] ⏳ 실제 Gemini 4 Argon API 검증 및 ${
+            nextTurn ? getVoiceMeta(nextTurn).tag : "최종 판정"
+          } 응답 생성 중...`;
+        }
+        pendingNextBubble = createApiLoadingBubble(nextTurn || turn, mode);
+        container.appendChild(pendingNextBubble);
+        container.scrollTop = container.scrollHeight;
+      }
+
       const backendVerdict = await verifyPromise;
-      const tsEl = row.querySelector(`#turn-ts-${i}`);
+      removeApiLoadingBubble(pendingNextBubble);
+      if (runId !== activeSimRunId) return;
+
       if (backendVerdict && backendVerdict.interaction_id) {
         prevInteractionId = backendVerdict.interaction_id;
         if (tsEl) {
           tsEl.textContent = `[${turn.ts}] · Argon ID: ${backendVerdict.interaction_id.slice(0, 12)} (${backendVerdict.latency_ms}ms)`;
         }
-        const proofSlot = row.querySelector(`#turn-proof-${i}`);
         if (proofSlot) {
           proofSlot.style.display = "flex";
           proofSlot.innerHTML = formatApiProofBadgeHtml(backendVerdict, "/api/argon/verify");
@@ -1936,7 +2038,7 @@
 
       updateTelemetryAfterTurn(mergedTurn, i, streamSpec.turns.length, mode);
 
-      await new Promise((r) => setTimeout(r, 420));
+      await new Promise((r) => setTimeout(r, 320));
     }
 
     if (runId === activeSimRunId) {
