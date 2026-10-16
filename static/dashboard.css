@@ -2156,12 +2156,14 @@ body {
 }
 
 /* In English Judge Mode, make English Telemetry the primary bold text in chat bubbles */
-body.ttc-lang-en .ttc-bubble-box {
+body.ttc-lang-en .ttc-bubble-box,
+body.ttc-lang-en .chat-bubble {
   display: flex;
   flex-direction: column;
 }
 
-body.ttc-lang-en .ttc-bubble-box .en-telemetry {
+body.ttc-lang-en .ttc-bubble-box .en-telemetry,
+body.ttc-lang-en .chat-bubble .en-telemetry {
   order: -1;
   font-size: 13px !important;
   font-weight: 600 !important;
@@ -2173,7 +2175,8 @@ body.ttc-lang-en .ttc-bubble-box .en-telemetry {
   border-bottom: 1px dashed rgba(255, 255, 255, 0.14) !important;
 }
 
-body.ttc-lang-en .ttc-bubble-box .kr-utterance {
+body.ttc-lang-en .ttc-bubble-box .kr-utterance,
+body.ttc-lang-en .chat-bubble .kr-utterance {
   font-size: 11.5px !important;
   color: #a1a1aa !important;
   line-height: 1.45 !important;

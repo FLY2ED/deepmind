@@ -1828,13 +1828,18 @@
   }
 
   function createApiLoadingBubble(nextTurn, mode = "critical") {
+    const isEn = currentUiLang === "en";
     const incoming = nextTurn ? isIncomingCallerTurn(nextTurn, mode) : false;
     const voiceMeta = nextTurn
       ? getVoiceMeta(nextTurn)
-      : { tag: "AI 김순자 할머니 (대신 통화중)", roleLabel: "Ch2 AI 방패 오디오" };
-    const speakerTitle = nextTurn ? nextTurn.speakerSub : "AI 방패 · Gemini 4 Argon 실시간 응대 생성";
-    const badgeText = nextTurn ? nextTurn.badgeText : "AI 방패 · LIVE API";
-    const avatarEmoji = incoming ? "🚨" : voiceMeta.tag.includes("할머니") ? "👵" : "🛡️";
+      : { tag: isEn ? "AI Grandma Soon-ja (Active Decoy)" : "AI 김순자 할머니 (대신 통화중)", roleLabel: "Ch2 AI Shield Audio" };
+    const speakerTitle = nextTurn
+      ? nextTurn.speakerSub
+      : isEn
+        ? "AI Shield · Gemini 4 Argon Live Response"
+        : "AI 방패 · Gemini 4 Argon 실시간 응대 생성";
+    const badgeText = nextTurn ? nextTurn.badgeText : isEn ? "AI Shield · LIVE API" : "AI 방패 · LIVE API";
+    const avatarEmoji = incoming ? "🚨" : voiceMeta.tag.includes("할머니") || voiceMeta.tag.includes("Soon-ja") ? "👵" : "🛡️";
     const avatarClass = incoming ? "avatar-caller-crit" : "avatar-ai-decoy";
 
     const row = document.createElement("div");
@@ -1843,21 +1848,25 @@
       <div class="chat-avatar ${avatarClass}">${avatarEmoji}</div>
       <div class="chat-col">
         <div class="chat-meta-line">
-          <span class="badge badge-info">${incoming ? "📥 수신 채널" : "🛡️ AI 방패"} · ${badgeText}</span>
+          <span class="badge badge-info">${incoming ? (isEn ? "📥 Inbound" : "📥 수신 채널") : isEn ? "🛡️ AI Shield" : "🛡️ AI 방패"} · ${badgeText}</span>
           <span class="chat-speaker-name">${speakerTitle}</span>
           <span class="badge" style="font-size:9.5px;opacity:0.9;">🎙️ ${voiceMeta.tag}</span>
-          <span class="chat-time" data-loading-timer>[실시간 API 대기 · 0.1s]</span>
+          <span class="chat-time" data-loading-timer>${isEn ? "[Live API Reasoning · 0.1s]" : "[실시간 API 대기 · 0.1s]"}</span>
         </div>
         <div class="ttc-api-loading-bubble">
           <div class="ttc-api-loading-top">
             <span class="ttc-spinner-ring"></span>
-            <span>실제 Gemini 4 Argon API 추론 중 · 법령·판례 대조 및 응답 생성 중입니다</span>
+            <span>${
+              isEn
+                ? "Live Gemini 4 Argon API Reasoning · Cross-verifying Korean statutes & generating response"
+                : "실제 Gemini 4 Argon API 추론 중 · 법령·판례 대조 및 응답 생성 중입니다"
+            }</span>
             <span class="ttc-typing-dots"><span></span><span></span><span></span></span>
           </div>
           <div class="ttc-api-loading-sub">
-            <span>⚡ POST /api/argon/verify (1M Byte-0 Prefix Cache 조회 중)</span>
+            <span>⚡ POST /api/argon/verify (1M Byte-0 Prefix Cache Lookup)</span>
             <span>·</span>
-            <span data-loading-elapsed>경과 시간: 0.1s</span>
+            <span data-loading-elapsed>${isEn ? "Elapsed: 0.1s" : "경과 시간: 0.1s"}</span>
           </div>
         </div>
       </div>
@@ -1872,8 +1881,8 @@
         return;
       }
       const sec = ((performance.now() - t0) / 1000).toFixed(1);
-      if (timerEl) timerEl.textContent = `[실시간 API 추론 중 · ${sec}s]`;
-      if (elapsedEl) elapsedEl.textContent = `경과 시간: ${sec}s`;
+      if (timerEl) timerEl.textContent = isEn ? `[Live API Reasoning · ${sec}s]` : `[실시간 API 추론 중 · ${sec}s]`;
+      if (elapsedEl) elapsedEl.textContent = isEn ? `Elapsed: ${sec}s` : `경과 시간: ${sec}s`;
     }, 100);
     row._loadingIntervalId = intervalId;
     return row;
@@ -1922,14 +1931,25 @@
     simBar.innerHTML = `
       <div class="ttc-sim-status">
         <span class="ttc-pulse-dot"></span>
-        <span id="ttc-sim-bar-text">${streamSpec.label} — 동일 발신자 음성 재생 및 실시간 전사 시작...</span>
+        <span id="ttc-sim-bar-text">${streamSpec.label} — ${
+      currentUiLang === "en"
+        ? "Streaming neural audio & live diarized STT..."
+        : "동일 발신자 음성 재생 및 실시간 전사 시작..."
+    }</span>
       </div>
-      <button type="button" class="badge" id="ttc-sim-stop-btn" style="cursor:pointer;">⏹ 음성 중지</button>
+      <button type="button" class="badge" id="ttc-sim-stop-btn" style="cursor:pointer;">${
+        currentUiLang === "en" ? "⏹ Stop Audio" : "⏹ 음성 중지"
+      }</button>
     `;
     document.getElementById("ttc-sim-stop-btn").onclick = () => {
       stopActiveSimulation();
       const txt = document.getElementById("ttc-sim-bar-text");
-      if (txt) txt.textContent = "시뮬레이션 일시 중지됨 (카드를 다시 누르면 처음부터 재생됩니다)";
+      if (txt) {
+        txt.textContent =
+          currentUiLang === "en"
+            ? "Simulation paused (click any scenario card to restart)"
+            : "시뮬레이션 일시 중지됨 (카드를 다시 누르면 처음부터 재생됩니다)";
+      }
     };
 
     let prevInteractionId = null;
@@ -1942,9 +1962,14 @@
 
       const barText = document.getElementById("ttc-sim-bar-text");
       if (barText) {
-        barText.textContent = `[턴 ${i + 1}/${streamSpec.turns.length}] ${
-          incoming ? "📥 Ch1 수신 오디오" : "🛡️ Ch2 AI 방패 오디오"
-        } 재생 중 · 🎙️ ${voiceMeta.tag}`;
+        barText.textContent =
+          currentUiLang === "en"
+            ? `[Turn ${i + 1}/${streamSpec.turns.length}] ${
+                incoming ? "📥 Ch1 Inbound Caller" : "🛡️ Ch2 AI Shield"
+              } Streaming · 🎙️ ${voiceMeta.tag}`
+            : `[턴 ${i + 1}/${streamSpec.turns.length}] ${
+                incoming ? "📥 Ch1 수신 오디오" : "🛡️ Ch2 AI 방패 오디오"
+              } 재생 중 · 🎙️ ${voiceMeta.tag}`;
       }
 
       // Render Messenger Chat Bubble Row (Left for Incoming Caller, Right for AI Shield)
@@ -1965,7 +1990,11 @@
         proofSlot.innerHTML = `
           <span class="ttc-api-proof-pill" style="display:inline-flex;align-items:center;gap:6px;border-color:rgba(56,189,248,0.45);color:#bae6fd;">
             <span class="ttc-spinner-ring" style="width:11px;height:11px;border-width:1.8px;"></span>
-            <span>실시간 <strong>Gemini 4 Argon API</strong> 검증 호출 중... (<code>POST /api/argon/verify</code>)</span>
+            <span>${
+              currentUiLang === "en"
+                ? 'Calling live <strong>Gemini 4 Argon API</strong>... (<code>POST /api/argon/verify</code>)'
+                : '실시간 <strong>Gemini 4 Argon API</strong> 검증 호출 중... (<code>POST /api/argon/verify</code>)'
+            }</span>
           </span>
         `;
       }
@@ -1997,12 +2026,18 @@
       if (!apiDone) {
         if (tsEl) {
           const waitedSec = ((performance.now() - apiStartMs) / 1000).toFixed(1);
-          tsEl.textContent = `[${turn.ts}] · ⏳ 실시간 Gemini API 응답 대기 중 (${waitedSec}s...)`;
+          tsEl.textContent =
+            currentUiLang === "en"
+              ? `[${turn.ts}] · ⏳ Waiting for live Gemini API (${waitedSec}s...)`
+              : `[${turn.ts}] · ⏳ 실시간 Gemini API 응답 대기 중 (${waitedSec}s...)`;
         }
         if (barText) {
-          barText.textContent = `[턴 ${i + 1}/${streamSpec.turns.length}] ⏳ 실제 Gemini 4 Argon API 검증 및 ${
-            nextTurn ? getVoiceMeta(nextTurn).tag : "최종 판정"
-          } 응답 생성 중...`;
+          barText.textContent =
+            currentUiLang === "en"
+              ? `[Turn ${i + 1}/${streamSpec.turns.length}] ⏳ Live Gemini 4 Argon API verifying & generating next response...`
+              : `[턴 ${i + 1}/${streamSpec.turns.length}] ⏳ 실제 Gemini 4 Argon API 검증 및 ${
+                  nextTurn ? getVoiceMeta(nextTurn).tag : "최종 판정"
+                } 응답 생성 중...`;
         }
         pendingNextBubble = createApiLoadingBubble(nextTurn || turn, mode);
         container.appendChild(pendingNextBubble);
@@ -2024,7 +2059,10 @@
         }
         renderLiveApiTelemetryProof(backendVerdict, `POST /api/argon/verify (Turn ${i + 1}/${streamSpec.turns.length})`);
       } else if (tsEl) {
-        tsEl.textContent = `[${turn.ts}] · 전사 및 Argon 검증 완료`;
+        tsEl.textContent =
+          currentUiLang === "en"
+            ? `[${turn.ts}] · Diarized STT & Argon Verified`
+            : `[${turn.ts}] · 전사 및 Argon 검증 완료`;
       }
 
       // Merge live backend IOCs & statutory rule violations into turn telemetry if present
@@ -2044,13 +2082,16 @@
     if (runId === activeSimRunId) {
       const barText = document.getElementById("ttc-sim-bar-text");
       if (barText) {
-        barText.textContent = `완료 · 총 ${streamSpec.turns.length}턴 동일 발신자 음성 전사 및 Gemini 4 Argon 실시간 API 검증이 완료되었습니다.`;
+        barText.textContent =
+          currentUiLang === "en"
+            ? `Completed · All ${streamSpec.turns.length} turns transcribed and verified by live Gemini 4 Argon API.`
+            : `완료 · 총 ${streamSpec.turns.length}턴 동일 발신자 음성 전사 및 Gemini 4 Argon 실시간 API 검증이 완료되었습니다.`;
       }
       appendInlineHitlCardToChat(container, mode);
     }
   }
 
-  let currentUiLang = new URLSearchParams(window.location.search).get("lang") === "en" ? "en" : "ko";
+  let currentUiLang = new URLSearchParams(window.location.search).get("lang") === "ko" ? "ko" : "en";
 
   const UI_I18N = {
     ko: {
@@ -2226,7 +2267,7 @@
   };
 
   function setDashboardLang(lang) {
-    currentUiLang = lang === "en" ? "en" : "ko";
+    currentUiLang = lang === "ko" ? "ko" : "en";
     document.body.classList.toggle("ttc-lang-en", currentUiLang === "en");
 
     document.querySelectorAll("[data-lang-switch]").forEach((btn) => {
@@ -2361,6 +2402,41 @@
       iocKeys[4].textContent = t.iocKey5;
     }
 
+    // Dual channel audio monitor & composer localization
+    if (currentUiLang === "en") {
+      setTxt("#ttc-ch1-title", "📥 Ch1 Incoming Caller Audio");
+      setTxt("#ttc-ch1-sub", "Standby · 16kHz PCM Inbound Stream");
+      setTxt("#ttc-ch2-title", "🛡️ Ch2 AI Shield Outbound (TakeTheCall)");
+      setTxt("#ttc-ch2-sub", "Standby · 24kHz Gemini 3.8 Live");
+      setTxt("#verdict-title-text", "Live Threat Verdict · High-Risk Scam Pattern Detected! (94.5%)");
+      setTxt("#verdict-sub-text", "5 Live Forensic IOCs · 3 Statutory Warrant Violations Flagged");
+      document.querySelectorAll(".ttc-replay-btn").forEach((b) => (b.textContent = "🔊 Play Audio"));
+      const chatInput = document.getElementById("ttc-chat-input");
+      if (chatInput) {
+        chatInput.placeholder =
+          "Judge Live Test: Type any caller prompt or click a [Sample Warrant Image] above to invoke the real Gemini API...";
+      }
+      setTxt("#ttc-chat-send", "⚡ Run Live Gemini API ↵");
+      setTxt(".ttc-chat-hitl-title span:first-child", "🛡️ Family Guardian HITL Co-Signing & 112/1332 Dispatch");
+      setHtml(".ttc-chat-hitl-desc", t.hitlDesc);
+      setTxt("#ttc-inline-hitl-btn-text", "Approve Family HITL & Dispatch to 112 Police · 1332 FSS →");
+    } else {
+      setTxt("#ttc-ch1-title", "📥 Ch1 수신 오디오 (발신자)");
+      setTxt("#ttc-ch1-sub", "대기 중 · 16kHz PCM 인입 스트림");
+      setTxt("#ttc-ch2-title", "🛡️ Ch2 AI 대역 방패 (대신받아)");
+      setTxt("#ttc-ch2-sub", "대기 중 · 24kHz Gemini 3.8 Live");
+      document.querySelectorAll(".ttc-replay-btn").forEach((b) => (b.textContent = "🔊 음성 듣기"));
+      const chatInput = document.getElementById("ttc-chat-input");
+      if (chatInput) {
+        chatInput.placeholder =
+          "심사위원 직접 테스트: 임의의 통화 문장을 입력하거나 위 [위조영장 샘플 이미지 전송] 버튼을 눌러 실제 Gemini API를 호출하세요...";
+      }
+      setTxt("#ttc-chat-send", "⚡ 실시간 Gemini 추론 전송 ↵");
+      setTxt(".ttc-chat-hitl-title span:first-child", "🛡️ 보호자 승인 및 기관 긴급 발송 (HITL)");
+      setHtml(".ttc-chat-hitl-desc", t.hitlDesc);
+      setTxt("#ttc-inline-hitl-btn-text", "가족에게 알리고 112·금감원 신고 준비하기 →");
+    }
+
     setTxt("#guardian-btn-text", t.hitlBtn);
     applyTossCopy("critical");
   }
@@ -2376,8 +2452,8 @@
       langToggle.id = "ttc-topbar-lang-toggle";
       langToggle.className = "ttc-lang-toggle-group";
       langToggle.innerHTML = `
-        <button type="button" class="ttc-lang-toggle-btn" data-lang-switch="en" title="Switch UI to English for Hackathon Judges">🌐 EN (Judge Mode)</button>
-        <button type="button" class="ttc-lang-toggle-btn active" data-lang-switch="ko" title="한국어 UI 모드">🇰🇷 KO</button>
+        <button type="button" class="ttc-lang-toggle-btn ${currentUiLang === "en" ? "active" : ""}" data-lang-switch="en" title="Switch UI to English for Hackathon Judges">🌐 EN (Judge Mode)</button>
+        <button type="button" class="ttc-lang-toggle-btn ${currentUiLang === "ko" ? "active" : ""}" data-lang-switch="ko" title="한국어 UI 모드">🇰🇷 KO</button>
       `;
       topbarRight.insertBefore(langToggle, topbarRight.firstChild);
       langToggle.querySelectorAll("[data-lang-switch]").forEach((btn) => {
@@ -2789,12 +2865,16 @@
 
       const healthEl = document.getElementById("backend-health-text");
       if (healthEl && health && health.knowledge_base) {
-        healthEl.textContent = `사례 ${health.knowledge_base.cases_loaded}건 · 법령 ${health.knowledge_base.statutory_rules_count}종 캐시 완료`;
+        healthEl.textContent =
+          currentUiLang === "en"
+            ? `${health.knowledge_base.cases_loaded} Scam Cases · ${health.knowledge_base.statutory_rules_count} Statutes Cached`
+            : `사례 ${health.knowledge_base.cases_loaded}건 · 법령 ${health.knowledge_base.statutory_rules_count}종 캐시 완료`;
       }
 
       const grid = document.getElementById("ttc-cases-grid");
       if (grid && casesData && Array.isArray(casesData.cases)) {
-        document.getElementById("nav-cases-count").textContent = `${casesData.cases.length}건`;
+        document.getElementById("nav-cases-count").textContent =
+          currentUiLang === "en" ? `${casesData.cases.length} Cases` : `${casesData.cases.length}건`;
 
         // Sort or keep CASE-01..CASE-20 order, marking the 3 audio-enabled cases distinctly
         grid.innerHTML = casesData.cases
