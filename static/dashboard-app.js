@@ -1469,6 +1469,34 @@
     const forgeryList = document.getElementById("forgery-flags-list");
     if (!cardBody || !forgeryList) return;
 
+    // Upgrade .warrant-preview with Persona-style red laser scan bar + 3 dashed forgery bounding-box markers
+    const warrantPreview = cardBody.querySelector(".warrant-preview");
+    if (warrantPreview && !warrantPreview.querySelector(".vision-scan-bar")) {
+      warrantPreview.classList.add("ttc-warrant-scanner-doc");
+      const scanBar = document.createElement("div");
+      scanBar.className = "vision-scan-bar";
+      warrantPreview.prepend(scanBar);
+
+      const bboxOverlay = document.createElement("div");
+      bboxOverlay.id = "ttc-warrant-bbox-overlay";
+      bboxOverlay.style.cssText = "display:flex;flex-direction:column;gap:8px;margin-top:8px;";
+      bboxOverlay.innerHTML = `
+        <div class="ttc-bbox-marker" data-forger="1">
+          <div class="ttc-bbox-tag">[위조 1] '형제'는 검찰 접수번호예요 (법원 영장 아님)</div>
+          <div style="font-size:11px;color:#fecdd3;font-family:var(--font-mono);font-weight:700;">사건번호: 2026형제48291호 (법원 구속영장 양식 위반)</div>
+        </div>
+        <div class="ttc-bbox-marker" data-forger="2">
+          <div class="ttc-bbox-tag">[위조 2] 영장은 '법원 판사'만 발부할 수 있어요 (형소법 제85조·제201조 위반)</div>
+          <div style="font-size:11px;color:#fecdd3;font-weight:600;">발부기관: 서울중앙지검 검사 단독 명의 · 카카오톡 전자송달 불가</div>
+        </div>
+        <div class="ttc-bbox-marker" data-forger="3">
+          <div class="ttc-bbox-tag">[위조 3] 검찰총장 사각 도장 비율이 위조됐어요 (관인규정 위반)</div>
+          <div style="font-size:11px;color:#fecdd3;font-weight:600;">정방형(4.5cm) 규격 불일치 및 투명 PNG 픽셀 격자 합성 적발</div>
+        </div>
+      `;
+      warrantPreview.appendChild(bboxOverlay);
+    }
+
     const existingBox = document.getElementById("ttc-warrant-live-box");
     if (existingBox) existingBox.remove();
 
@@ -1629,14 +1657,24 @@
     const kpiBadge = document.getElementById("kpi-verdict-badge");
     const verdictTitle = document.getElementById("verdict-title-text");
     const verdictSub = document.getElementById("verdict-sub-text");
+    const liveRiskFill = document.getElementById("ttc-live-risk-fill");
+    const thinkingBadge = document.getElementById("ttc-thinking-level-pill");
+
     if (scorePill) scorePill.textContent = "0.0%";
     if (kpiHero) kpiHero.textContent = "0.0%";
+    if (liveRiskFill) {
+      liveRiskFill.style.width = "4%";
+      liveRiskFill.style.background = "linear-gradient(90deg, #38bdf8, #22c55e)";
+    }
+    if (thinkingBadge) {
+      thinkingBadge.textContent = "thinking: low (대기)";
+    }
     if (kpiBadge) {
       kpiBadge.className = "badge badge-info";
       kpiBadge.textContent = "LIVE ANALYZING";
     }
     if (verdictTitle) verdictTitle.textContent = "실시간 수신 오디오 감지 및 STT 전사 시작...";
-    if (verdictSub) verdictSub.textContent = "화자별 음성(Ch1 수신 / Ch2 AI 방패)과 법령 위반 여부를 대조하고 있어요";
+    if (verdictSub) verdictSub.textContent = "동일 발신자 음성(Ch1 수신 / Ch2 AI 방패)과 법령 위반 여부를 실시간 대조하고 있어요";
 
     ["kc-1", "kc-2", "kc-3", "kc-4"].forEach((id) => {
       const el = document.getElementById(id);
@@ -1674,12 +1712,48 @@
     const verdictSub = document.getElementById("verdict-sub-text");
     const heroTitle = document.getElementById("toss-hero-title");
     const liveTimer = document.getElementById("live-timer-badge");
+    const liveRiskFill = document.getElementById("ttc-live-risk-fill");
+    const thinkingBadge = document.getElementById("ttc-thinking-level-pill");
+    const cacheHitPill = document.getElementById("ttc-cache-hit-pill");
+    const cacheTokLabel = document.getElementById("ttc-cache-tok-label");
 
     if (liveTimer) liveTimer.textContent = `LIVE · ${turn.ts} (턴 ${turnIdx + 1}/${totalTurns})`;
     if (scorePill) scorePill.textContent = scoreStr;
     if (kpiHero) kpiHero.textContent = scoreStr;
     if (verdictTitle) verdictTitle.textContent = turn.statusTitle;
     if (heroTitle) heroTitle.textContent = turn.statusTitle;
+
+    if (liveRiskFill) {
+      const pct = mode === "safe" ? Math.max(4, turn.score * 6) : Math.min(100, Math.max(12, turn.score));
+      liveRiskFill.style.width = `${pct}%`;
+      liveRiskFill.style.background =
+        mode === "safe"
+          ? "linear-gradient(90deg, #22c55e, #4ade80)"
+          : turn.score < 60
+            ? "linear-gradient(90deg, #facc15, #f97316)"
+            : "linear-gradient(90deg, #f97316, #ef4444, #dc2626)";
+    }
+
+    if (thinkingBadge) {
+      if (mode === "safe") {
+        thinkingBadge.textContent = "low (정상 통과)";
+      } else if (turnIdx === 0) {
+        thinkingBadge.textContent = "low → medium";
+      } else if (turnIdx < totalTurns - 1) {
+        thinkingBadge.textContent = "medium (실시간 추적)";
+      } else {
+        thinkingBadge.textContent = "medium → high";
+      }
+    }
+
+    if (cacheHitPill) {
+      const hitPct = (95.4 + ((turnIdx + 1) / Math.max(1, totalTurns)) * 1.0).toFixed(1);
+      cacheHitPill.textContent = `${hitPct}% Hit · LIVE`;
+    }
+    if (cacheTokLabel) {
+      const tokUsed = 18180 + (turnIdx + 1) * 60;
+      cacheTokLabel.textContent = `${tokUsed.toLocaleString()} / 19,100 tok`;
+    }
 
     if (verdictBox) {
       verdictBox.className =
@@ -1704,7 +1778,10 @@
       const kc = document.getElementById(`kc-${s}`);
       if (kc) {
         if (s <= turn.stageStep) {
-          kc.className = mode === "safe" ? "kc-step kc-safe-active" : "kc-step kc-active";
+          const isCurrent = s === turn.stageStep;
+          kc.className =
+            (mode === "safe" ? "kc-step kc-safe-active" : "kc-step kc-active") +
+            (isCurrent ? " kc-current-stage" : "");
         } else {
           kc.className = "kc-step";
         }
@@ -1787,7 +1864,7 @@
     simBar.innerHTML = `
       <div class="ttc-sim-status">
         <span class="ttc-pulse-dot"></span>
-        <span id="ttc-sim-bar-text">${streamSpec.label} — 화자별 음성 재생 및 실시간 전사 시작...</span>
+        <span id="ttc-sim-bar-text">${streamSpec.label} — 동일 발신자 음성 재생 및 실시간 전사 시작...</span>
       </div>
       <button type="button" class="badge" id="ttc-sim-stop-btn" style="cursor:pointer;">⏹ 음성 중지</button>
     `;
@@ -1865,14 +1942,346 @@
     if (runId === activeSimRunId) {
       const barText = document.getElementById("ttc-sim-bar-text");
       if (barText) {
-        barText.textContent = `완료 · 총 ${streamSpec.turns.length}턴 화자별 음성 전사 및 Gemini 4 Argon 실시간 API 검증이 완료되었습니다.`;
+        barText.textContent = `완료 · 총 ${streamSpec.turns.length}턴 동일 발신자 음성 전사 및 Gemini 4 Argon 실시간 API 검증이 완료되었습니다.`;
       }
+      appendInlineHitlCardToChat(container, mode);
     }
+  }
+
+  let currentUiLang = new URLSearchParams(window.location.search).get("lang") === "en" ? "en" : "ko";
+
+  const UI_I18N = {
+    ko: {
+      brandSub: "Voice Phishing Defense SOC",
+      sideHeaderTitle: "대신받아 내비게이션",
+      sideGroupLabel: "통화 보호 메뉴",
+      navAllLabel: "한눈에 보는 통화 보호",
+      navAllDesc: "3단 통합 관제 화면",
+      navAllBadge: "전체",
+      navCallLabel: "1. 실시간 통화 방어",
+      navCallDesc: "인젝터 · 대화 전사",
+      navCallBadge: "음성·채팅",
+      navWarrantLabel: "2. 카톡 서류·영장 검사",
+      navWarrantDesc: "멀티모달 위조 감식",
+      navWarrantBadge: "6대 법령",
+      navGuardianLabel: "3. 가족 승인 · 기관 신고",
+      navGuardianDesc: "HITL · 지급정지 연동",
+      navGuardianBadge: "112·1332",
+      navCasesLabel: "4. 보이스피싱 사례 20선",
+      navCasesDesc: "금감원·경찰청 판례 사전",
+      guideTitle: "토스식 3초 행동 요약",
+      guideStep1: "사기범이 겁을 주면 <strong>AI 미끼(김순자)</strong>가 대신 대화를 끌어요.",
+      guideStep2: "카톡으로 온 영장·공문은 <strong>6가지 법 기준</strong>으로 위조를 잡아내요.",
+      guideStep3: "위험이 확실해지면 <strong>가족 승인 후 112·금감원</strong>에 바로 신고해요.",
+      btnRunSafe: "▶ 안심 통화 실시간 재생",
+      btnRunCrit: "▶ 위험 통화(CASE-01) 실시간 재생",
+      btnRunWarrant: "🖼️ 위조영장 샘플 이미지 AI 감식",
+      btnRunGuardian: "▶ 딥페이크(CASE-08) 실시간 재생",
+      topTabSafe: "정상 통화 대조 (SAFE 15s)",
+      topTabCrit: "검찰사칭·영장감식 (CRITICAL)",
+      topTabGuard: "Stage 4 차단·가족승인 (INTERRUPT)",
+      kpi1Label: "실시간 위협 판정",
+      kpi1Sub: "CASE-01 검찰사칭 + 위조구속영장",
+      kpi2Label: "양방향 통화 지연",
+      kpi2Sub: "Argon 백그라운드 추론 1.58s (끊김 0ms)",
+      kpi3Label: "1M 암시적 캐시",
+      kpi3Sub: "18,420 / 19,100 tok (Byte-0 정적 프리픽스)",
+      kpi4Label: "적발 법령·단서",
+      kpi4Badge: "형소법 85·118조",
+      kpi4Hero: "11건 적발",
+      kpi4Sub: "공문 위조 6건 · 대포통장/URL 5건 채증",
+      cardTitleInjector: "통화 스트림 인젝터 (Call Injector)",
+      cardTitleWarrant: "위조 공문서 멀티모달 포렌식",
+      cardTitlePersona: "응대 페르소나 & 다국어 가드레일",
+      cardTitleCenter: "실시간 양방향 오디오 스펙트럼 & 한·영 병기 화자분리 로그",
+      cardTitleKillchain: "킬체인 단계 & Argon 2-Tier 추론",
+      cardTitleIoc: "실시간 채증 5대 범죄 단서 (IOCs)",
+      cardTitleHitl: "보호자 승인 및 기관 긴급 발송 (HITL)",
+      injHint: "클릭 시 화자별 음성·채팅 시작",
+      injPlayPill: "🔊 실시간 재생·전사",
+      injSafeBadge: "SAFE CONTROL · 정상 대조군",
+      injSafeDur: "00:15 · 오탐 0%",
+      injSafeName: "신한은행 정기예금 만기 및 우체국 등기 안내",
+      injSafeDesc: "앱 설치·안전계좌 요구 없음 · 공식 영업점 방문 안내",
+      inj01Dur: "00:52 · 검찰+위조영장",
+      inj01Name: "서울중앙지검 반부패수사1부 사칭 + 카톡 구속영장",
+      inj01Desc: "12억 대포통장 연루 협박 · TeamViewer 원격제어 및 안전계좌 요구",
+      inj04Dur: "00:41 · 악성 APK",
+      inj04Name: "금융감독원 저금리 대환대출 사칭 + 원격제어 .apk",
+      inj04Desc: "중복대출 약정 위반 협박 · 출처 불명 압축앱 설치 유도",
+      inj08Dur: "00:36 · 납치·응급실",
+      inj08Name: "자녀 음성 딥페이크 납치·응급실 긴급 합의금 갈취",
+      inj08Desc: "음성 복제 울음소리 + 발설 금지 강요 및 즉각 현금 송금 요구",
+      micBtnReady: "실시간 WebAudio 마이크 스트림 연결 (16kHz PCM Ready)",
+      warrantDocTitle: "서울중앙지방검찰청 구속영장 청구서",
+      warrantDocSub: "사건번호 2026형제4821호 · http://spo-go-kr.net",
+      personaSoonjaName: "김순자 (68세, 은퇴 교사 · 지연 미끼)",
+      personaGuardianName: "법무 보호자 방패 (Stage 4 INTERRUPT)",
+      personaForeignName: "체류 외국인 보호 모드 (Minh Nguyen, 24)",
+      kc1: "S1 권위사칭<br/>검찰 사칭",
+      kc2: "S2 위조영장<br/>카톡 송달",
+      kc3: "S3 원격제어<br/>TeamViewer",
+      kc4: "S4 고립·이체<br/>INTERRUPT",
+      iocKey1: "1. 위조 사건번호",
+      iocKey2: "2. 사칭 기관·성명",
+      iocKey3: "3. 피싱 URL·번호",
+      iocKey4: "4. 대포통장·원격앱",
+      iocKey5: "5. 갈취 명목·금액",
+      hitlDesc: '통화 종료 후 <code>gemini-4-argon (high)</code>가 녹취 타임스탬프와 대조 검증한 무환각(Hallucination-Free) 증거 패키지입니다.',
+      hitlBtn: "보호자 승인 및 112 · 1332 · 지급정지 발송",
+      heroCritTitle: TOSS_COPIES.critical.title,
+      heroCritSub: TOSS_COPIES.critical.sub,
+      heroSafeTitle: TOSS_COPIES.safe.title,
+      heroSafeSub: TOSS_COPIES.safe.sub,
+      heroGuardTitle: TOSS_COPIES.guardian.title,
+      heroGuardSub: TOSS_COPIES.guardian.sub,
+    },
+    en: {
+      brandSub: "Voice Phishing Defense SOC",
+      sideHeaderTitle: "TakeTheCall Navigation",
+      sideGroupLabel: "ACTIVE CALL DEFENSE MENU",
+      navAllLabel: "Unified SOC Overview",
+      navAllDesc: "3-Pane Live Defense Console",
+      navAllBadge: "ALL",
+      navCallLabel: "1. Live Call Shield",
+      navCallDesc: "Audio Injector & Diarized STT",
+      navCallBadge: "Audio·Chat",
+      navWarrantLabel: "2. Forged Warrant Audit",
+      navWarrantDesc: "Multimodal Vision Forensics",
+      navWarrantBadge: "6 Statutes",
+      navGuardianLabel: "3. Family HITL & 112/1332",
+      navGuardianDesc: "Co-Signing & Account Freeze",
+      navGuardianBadge: "Dispatch",
+      navCasesLabel: "4. 20 K-Scam Casebook",
+      navCasesDesc: "FSS & Police Precedent DB",
+      guideTitle: "3-Second Defense Workflow",
+      guideStep1: "When a scammer threatens the victim, <strong>AI Decoy (Grandma Soon-ja)</strong> takes over and stalls the call.",
+      guideStep2: "Fake warrants sent via KakaoTalk are audited against <strong>6 Korean statutory rules</strong> in real time.",
+      guideStep3: "At Stage 4 extortion, <strong>Family HITL Co-Signing</strong> dispatches evidence to 112 Police & 1332 FSS.",
+      btnRunSafe: "▶ Play Safe Call (Benign Control)",
+      btnRunCrit: "▶ Play Critical Scam (CASE-01)",
+      btnRunWarrant: "🖼️ Audit Forged Warrant Image (AI Vision)",
+      btnRunGuardian: "▶ Play Deepfake Kidnap (CASE-08)",
+      topTabSafe: "Benign Call Control (SAFE 15s)",
+      topTabCrit: "Prosecutor Impersonation (CRITICAL)",
+      topTabGuard: "Stage 4 Preempt & Family HITL (INTERRUPT)",
+      kpi1Label: "Live Threat Verdict",
+      kpi1Sub: "CASE-01 Prosecutor Scam + Forged Warrant",
+      kpi2Label: "Duplex Audio Latency",
+      kpi2Sub: "Argon NON_BLOCKING 1.58s (0ms Audio Dropout)",
+      kpi3Label: "1M Implicit Cache",
+      kpi3Sub: "18,420 / 19,100 tok (Byte-0 Static Prefix)",
+      kpi4Label: "Statutes & IOCs Hit",
+      kpi4Badge: "Crim. Proc. Art. 85·118",
+      kpi4Hero: "11 Flags",
+      kpi4Sub: "6 Statutory Violations · 5 Verified Scam IOCs",
+      cardTitleInjector: "Live Call Stream Injector",
+      cardTitleWarrant: "Forged Warrant Multimodal Audit",
+      cardTitlePersona: "Active Personas & Expat Guardrail",
+      cardTitleCenter: "Live Bidirectional Audio Spectrum & Bilingual Diarized Log",
+      cardTitleKillchain: "Kill-Chain Stage & Argon 2-Tier Reasoning",
+      cardTitleIoc: "5 Extracted Forensic IOCs (Live Probing)",
+      cardTitleHitl: "Family Guardian HITL Co-Signing & 112/1332 Dispatch",
+      injHint: "Click to stream neural audio + live EN/KR transcript",
+      injPlayPill: "🔊 Live Audio + EN Sub",
+      injSafeBadge: "SAFE CONTROL · BENIGN CALL",
+      injSafeDur: "00:15 · 0% False Positive",
+      injSafeName: "Shinhan Bank Term-Deposit Maturity Notice",
+      injSafeDesc: "No app install or Safe Account demanded · Official branch visit guidance",
+      inj01Dur: "00:52 · Prosecutor + Warrant",
+      inj01Name: "Seoul Central Prosecutors' Impersonation + Fake Warrant",
+      inj01Desc: "$900K mule account threat · TeamViewer RAT & 'Safe Account' wire demand",
+      inj04Dur: "00:41 · Malicious APK",
+      inj04Name: "FSS Low-Interest Refinancing Scam + Malicious .apk",
+      inj04Desc: "Dual-loan breach threat · Coerces installing trojan APK via messenger",
+      inj08Dur: "00:36 · Voice Clone Kidnap",
+      inj08Name: "AI Deepfake Child Kidnapping & ER Settlement Extortion",
+      inj08Desc: "Cloned crying voice + strict isolation coercion & immediate wire demand",
+      micBtnReady: "Connect Live WebAudio Mic Stream (16kHz PCM Ready)",
+      warrantDocTitle: "Seoul Central District Prosecutors' Arrest Warrant",
+      warrantDocSub: "Case #2026-4821 · Spoofed Domain: http://spo-go-kr.net",
+      personaSoonjaName: "Soon-ja Kim (68, Retired Teacher · Stalling Decoy)",
+      personaGuardianName: "Legal Guardian Shield (Stage 4 INTERRUPT)",
+      personaForeignName: "Expat Multilingual Shield (Minh Nguyen, 24)",
+      kc1: "S1 Authority<br/>Prosecutor",
+      kc2: "S2 Fake Warrant<br/>SNS Delivery",
+      kc3: "S3 Remote RAT<br/>TeamViewer",
+      kc4: "S4 Isolation/Wire<br/>INTERRUPT",
+      iocKey1: "1. Forged Case No.",
+      iocKey2: "2. Impersonated Org",
+      iocKey3: "3. Phishing URL/Tel",
+      iocKey4: "4. Mule Acct / RAT",
+      iocKey5: "5. Extortion Demand",
+      hitlDesc: 'Hallucination-free forensic bundle cross-verified against diarized transcript timestamps by <code>gemini-4-argon (high)</code>.',
+      hitlBtn: "Approve Family HITL & Dispatch to 112 Police · 1332 FSS",
+      heroCritTitle: "CRITICAL ALERT: High-Probability Voice Phishing Detected!",
+      heroCritSub: "Korean prosecutors & FSS NEVER send warrants via KakaoTalk or demand remote control apps / Safe Account transfers.",
+      heroSafeTitle: "VERIFIED SAFE: Legitimate Financial Notification Call",
+      heroSafeSub: "No remote control apps, SSNs, or Safe Account transfers were requested during this call (0% False Positive).",
+      heroGuardTitle: "STAGE 4 INTERRUPT: AI Shield Preempted the Scammer!",
+      heroGuardSub: "AI Decoy isolated the user from coercion and extracted 5 forensic IOCs for Family HITL & 112/1332 dispatch.",
+    },
+  };
+
+  function setDashboardLang(lang) {
+    currentUiLang = lang === "en" ? "en" : "ko";
+    document.body.classList.toggle("ttc-lang-en", currentUiLang === "en");
+
+    document.querySelectorAll("[data-lang-switch]").forEach((btn) => {
+      btn.classList.toggle("active", btn.getAttribute("data-lang-switch") === currentUiLang);
+    });
+
+    const t = UI_I18N[currentUiLang];
+    const setTxt = (sel, val) => {
+      const el = document.querySelector(sel);
+      if (el && val !== undefined) el.textContent = val;
+    };
+    const setHtml = (sel, val) => {
+      const el = document.querySelector(sel);
+      if (el && val !== undefined) el.innerHTML = val;
+    };
+
+    setTxt("#ttc-side-brand-kr", t.sideHeaderTitle);
+    setTxt(".ttc-sidebar-group-label", t.sideGroupLabel);
+    setTxt('.ttc-nav-item[data-view="all"] .ttc-nav-label', t.navAllLabel);
+    setTxt('.ttc-nav-item[data-view="all"] .ttc-nav-desc', t.navAllDesc);
+    setTxt('.ttc-nav-item[data-view="all"] .ttc-nav-badge', t.navAllBadge);
+    setTxt('.ttc-nav-item[data-view="call"] .ttc-nav-label', t.navCallLabel);
+    setTxt('.ttc-nav-item[data-view="call"] .ttc-nav-desc', t.navCallDesc);
+    setTxt('.ttc-nav-item[data-view="call"] .ttc-nav-badge', t.navCallBadge);
+    setTxt('.ttc-nav-item[data-view="warrant"] .ttc-nav-label', t.navWarrantLabel);
+    setTxt('.ttc-nav-item[data-view="warrant"] .ttc-nav-desc', t.navWarrantDesc);
+    setTxt('.ttc-nav-item[data-view="warrant"] .ttc-nav-badge', t.navWarrantBadge);
+    setTxt('.ttc-nav-item[data-view="guardian"] .ttc-nav-label', t.navGuardianLabel);
+    setTxt('.ttc-nav-item[data-view="guardian"] .ttc-nav-desc', t.navGuardianDesc);
+    setTxt('.ttc-nav-item[data-view="guardian"] .ttc-nav-badge', t.navGuardianBadge);
+    setTxt('.ttc-nav-item[data-view="cases"] .ttc-nav-label', t.navCasesLabel);
+    setTxt('.ttc-nav-item[data-view="cases"] .ttc-nav-desc', t.navCasesDesc);
+
+    setTxt("#ttc-guide-title-text", t.guideTitle);
+    setHtml("#ttc-guide-step-1", t.guideStep1);
+    setHtml("#ttc-guide-step-2", t.guideStep2);
+    setHtml("#ttc-guide-step-3", t.guideStep3);
+
+    setTxt("#btn-run-safe", t.btnRunSafe);
+    setTxt("#btn-run-critical", t.btnRunCrit);
+    setTxt("#btn-run-warrant-sample", t.btnRunWarrant);
+    setTxt("#btn-run-guardian", t.btnRunGuardian);
+
+    setHtml("#mode-safe", `<span class="status-dot dot-emerald"></span> ${t.topTabSafe}`);
+    setHtml("#mode-critical", `<span class="status-dot dot-rose"></span> ${t.topTabCrit}`);
+    setHtml("#mode-guardian", `<span class="status-dot dot-amber"></span> ${t.topTabGuard}`);
+
+    const kpiCards = document.querySelectorAll(".kpi-card");
+    if (kpiCards.length >= 4) {
+      const k1 = kpiCards[0].querySelector(".kpi-label");
+      const k2 = kpiCards[1].querySelector(".kpi-label");
+      const k3 = kpiCards[2].querySelector(".kpi-label");
+      const k4 = kpiCards[3].querySelector(".kpi-label");
+      if (k1) k1.textContent = t.kpi1Label;
+      if (k2) k2.textContent = t.kpi2Label;
+      if (k3) k3.textContent = t.kpi3Label;
+      if (k4) k4.textContent = t.kpi4Label;
+    }
+    setTxt("#kpi-verdict-sub", t.kpi1Sub);
+    setTxt("#kpi-latency-sub", t.kpi2Sub);
+    setTxt("#kpi-ioc-badge", t.kpi4Badge);
+    setTxt("#kpi-ioc-hero", t.kpi4Hero);
+    setTxt("#kpi-ioc-sub", t.kpi4Sub);
+
+    // Card titles
+    const setCardTitleText = (cardEl, newText) => {
+      if (!cardEl) return;
+      const titleEl = cardEl.querySelector(".card-title");
+      if (!titleEl) return;
+      const svg = titleEl.querySelector("svg");
+      titleEl.innerHTML = "";
+      if (svg) titleEl.appendChild(svg);
+      titleEl.appendChild(document.createTextNode(" " + newText));
+    };
+
+    const leftCards = document.querySelectorAll(".command-grid > .pane-col:nth-child(1) > .card");
+    if (leftCards[0]) setCardTitleText(leftCards[0], t.cardTitleInjector);
+    if (leftCards[1]) setCardTitleText(leftCards[1], t.cardTitleWarrant);
+    if (leftCards[2]) setCardTitleText(leftCards[2], t.cardTitlePersona);
+
+    const centerCard = document.querySelector(".command-grid > .pane-col:nth-child(2) > .card");
+    if (centerCard) setCardTitleText(centerCard, t.cardTitleCenter);
+
+    const rightCards = document.querySelectorAll(".command-grid > .pane-col:nth-child(3) > .card");
+    if (rightCards[0]) setCardTitleText(rightCards[0], t.cardTitleKillchain);
+    if (rightCards[1]) setCardTitleText(rightCards[1], t.cardTitleIoc);
+    if (rightCards[2]) {
+      setCardTitleText(rightCards[2], t.cardTitleHitl);
+      const hitlDescEl = rightCards[2].querySelector(".card-body > div:first-child");
+      if (hitlDescEl) hitlDescEl.innerHTML = t.hitlDesc;
+    }
+
+    // Injector buttons
+    setTxt("#inj-safe .scenario-top .badge", t.injSafeBadge);
+    setTxt("#inj-safe .scenario-dur", t.injSafeDur);
+    setTxt("#inj-safe .scenario-name", t.injSafeName);
+    setTxt("#inj-safe .scenario-desc", t.injSafeDesc);
+
+    setTxt("#inj-case01 .scenario-dur", t.inj01Dur);
+    setTxt("#inj-case01 .scenario-name", t.inj01Name);
+    setTxt("#inj-case01 .scenario-desc", t.inj01Desc);
+
+    setTxt("#inj-case04 .scenario-dur", t.inj04Dur);
+    setTxt("#inj-case04 .scenario-name", t.inj04Name);
+    setTxt("#inj-case04 .scenario-desc", t.inj04Desc);
+
+    setTxt("#inj-case08 .scenario-dur", t.inj08Dur);
+    setTxt("#inj-case08 .scenario-name", t.inj08Name);
+    setTxt("#inj-case08 .scenario-desc", t.inj08Desc);
+
+    document.querySelectorAll(".ttc-scenario-hint").forEach((el) => (el.textContent = t.injHint));
+    document.querySelectorAll(".ttc-play-pill").forEach((el) => (el.textContent = t.injPlayPill));
+
+    setTxt("#mic-btn-label", t.micBtnReady);
+    setTxt(".warrant-doc-title", t.warrantDocTitle);
+    setTxt(".warrant-doc-sub", t.warrantDocSub);
+    setTxt("#persona-soonja .persona-name", t.personaSoonjaName);
+    setTxt("#persona-guardian .persona-name", t.personaGuardianName);
+    setTxt("#persona-foreign .persona-name", t.personaForeignName);
+
+    setHtml("#kc-1", t.kc1);
+    setHtml("#kc-2", t.kc2);
+    setHtml("#kc-3", t.kc3);
+    setHtml("#kc-4", t.kc4);
+
+    const iocKeys = document.querySelectorAll("#ioc-grid-container .ioc-key");
+    if (iocKeys.length >= 5) {
+      iocKeys[0].textContent = t.iocKey1;
+      iocKeys[1].textContent = t.iocKey2;
+      iocKeys[2].textContent = t.iocKey3;
+      iocKeys[3].textContent = t.iocKey4;
+      iocKeys[4].textContent = t.iocKey5;
+    }
+
+    setTxt("#guardian-btn-text", t.hitlBtn);
+    applyTossCopy("critical");
   }
 
   function buildSidebarAndHero() {
     const dashboardShell = document.querySelector(".dashboard-shell");
     if (!dashboardShell || document.querySelector(".ttc-app-shell")) return;
+
+    // Inject EN / KO Judge Mode Toggle into Topbar Right
+    const topbarRight = document.querySelector(".topbar-right");
+    if (topbarRight && !document.getElementById("ttc-topbar-lang-toggle")) {
+      const langToggle = document.createElement("div");
+      langToggle.id = "ttc-topbar-lang-toggle";
+      langToggle.className = "ttc-lang-toggle-group";
+      langToggle.innerHTML = `
+        <button type="button" class="ttc-lang-toggle-btn" data-lang-switch="en" title="Switch UI to English for Hackathon Judges">🌐 EN (Judge Mode)</button>
+        <button type="button" class="ttc-lang-toggle-btn active" data-lang-switch="ko" title="한국어 UI 모드">🇰🇷 KO</button>
+      `;
+      topbarRight.insertBefore(langToggle, topbarRight.firstChild);
+      langToggle.querySelectorAll("[data-lang-switch]").forEach((btn) => {
+        btn.addEventListener("click", () => setDashboardLang(btn.getAttribute("data-lang-switch")));
+      });
+    }
 
     const appShell = document.createElement("div");
     appShell.className = "ttc-app-shell";
@@ -1881,56 +2290,107 @@
     sidebar.className = "ttc-sidebar";
     sidebar.setAttribute("aria-label", "대신받아 메뉴 내비게이션");
     sidebar.innerHTML = `
-      <div>
+      <div class="ttc-sidebar-header">
+        <div class="brand-logo-mark" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <div class="ttc-sidebar-brand-text">
+          <span class="ttc-sidebar-brand-kr" id="ttc-side-brand-kr">대신받아 내비게이션</span>
+          <span class="ttc-sidebar-brand-sub">Voice Phishing Defense SOC</span>
+        </div>
+      </div>
+
+      <div class="ttc-sidebar-scroll">
         <div class="ttc-sidebar-group-label">통화 보호 메뉴</div>
         <nav class="ttc-sidebar-nav">
           <button type="button" class="ttc-nav-item active" data-view="all">
             <span class="ttc-nav-left">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-              <span>한눈에 보는 통화 보호</span>
+              <span class="ttc-nav-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+              </span>
+              <span class="ttc-nav-text-wrap">
+                <span class="ttc-nav-label">한눈에 보는 통화 보호</span>
+                <span class="ttc-nav-desc">3단 통합 관제 화면</span>
+              </span>
             </span>
             <span class="ttc-nav-badge">전체</span>
           </button>
           <button type="button" class="ttc-nav-item" data-view="call">
             <span class="ttc-nav-left">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              <span>1. 실시간 통화 방어</span>
+              <span class="ttc-nav-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </span>
+              <span class="ttc-nav-text-wrap">
+                <span class="ttc-nav-label">1. 실시간 통화 방어</span>
+                <span class="ttc-nav-desc">인젝터 · 대화 전사</span>
+              </span>
             </span>
             <span class="ttc-nav-badge">음성·채팅</span>
           </button>
           <button type="button" class="ttc-nav-item" data-view="warrant">
             <span class="ttc-nav-left">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              <span>2. 카톡 서류·영장 검사</span>
+              <span class="ttc-nav-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </span>
+              <span class="ttc-nav-text-wrap">
+                <span class="ttc-nav-label">2. 카톡 서류·영장 검사</span>
+                <span class="ttc-nav-desc">멀티모달 위조 감식</span>
+              </span>
             </span>
             <span class="ttc-nav-badge">6대 법령</span>
           </button>
           <button type="button" class="ttc-nav-item" data-view="guardian">
             <span class="ttc-nav-left">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-              <span>3. 가족 승인 · 기관 신고</span>
+              <span class="ttc-nav-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+              </span>
+              <span class="ttc-nav-text-wrap">
+                <span class="ttc-nav-label">3. 가족 승인 · 기관 신고</span>
+                <span class="ttc-nav-desc">HITL · 지급정지 연동</span>
+              </span>
             </span>
             <span class="ttc-nav-badge">112·1332</span>
           </button>
           <button type="button" class="ttc-nav-item" data-view="cases">
             <span class="ttc-nav-left">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-              <span>4. 보이스피싱 사례 20선</span>
+              <span class="ttc-nav-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              </span>
+              <span class="ttc-nav-text-wrap">
+                <span class="ttc-nav-label">4. 보이스피싱 사례 20선</span>
+                <span class="ttc-nav-desc">금감원·경찰청 판례 사전</span>
+              </span>
             </span>
             <span class="ttc-nav-badge" id="nav-cases-count">20건</span>
           </button>
         </nav>
+
+        <div class="ttc-easy-guide-box">
+          <div class="ttc-easy-guide-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span id="ttc-guide-title-text">토스식 3초 행동 요약</span>
+          </div>
+          <div class="ttc-easy-guide-list">
+            <div class="ttc-guide-step">
+              <span class="ttc-guide-num">1</span>
+              <span id="ttc-guide-step-1">사기범이 겁을 주면 <strong>AI 미끼(김순자)</strong>가 대신 대화를 끌어요.</span>
+            </div>
+            <div class="ttc-guide-step">
+              <span class="ttc-guide-num">2</span>
+              <span id="ttc-guide-step-2">카톡으로 온 영장·공문은 <strong>6가지 법 기준</strong>으로 위조를 잡아내요.</span>
+            </div>
+            <div class="ttc-guide-step">
+              <span class="ttc-guide-num">3</span>
+              <span id="ttc-guide-step-3">위험이 확실해지면 <strong>가족 승인 후 112·금감원</strong>에 바로 신고해요.</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="ttc-easy-guide-box">
-        <div class="ttc-easy-guide-title">토스식 3초 행동 요약</div>
-        <div class="ttc-easy-guide-desc">
-          1. 사기범이 겁을 주면 <strong>AI 미끼(김순자)</strong>가 대신 대화를 끌어요.<br/>
-          2. 카톡으로 온 영장·공문은 <strong>6가지 법 기준</strong>으로 위조를 잡아내요.<br/>
-          3. 위험이 확실해지면 <strong>가족 승인 후 112·금감원</strong>에 바로 신고해요.
-        </div>
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border-subtle);font-size:11px;color:var(--fg-subtle);" id="backend-health-text">
-          Gemini 3.8 Live + Gemini 4 Argon 가동 중
+      <div class="ttc-sidebar-footer">
+        <div class="ttc-sidebar-health-pill">
+          <span class="status-dot dot-emerald"></span>
+          <span id="backend-health-text">Gemini 3.8 Live + Argon 가동 중</span>
         </div>
       </div>
     `;
@@ -2063,9 +2523,24 @@
   }
 
   function applyTossCopy(mode) {
-    const copy = TOSS_COPIES[mode] || TOSS_COPIES.critical;
+    const t = UI_I18N[currentUiLang] || UI_I18N.ko;
     const heroTitle = document.getElementById("toss-hero-title");
     const heroSub = document.getElementById("toss-hero-sub");
+    if (currentUiLang === "en") {
+      if (heroTitle) {
+        heroTitle.textContent =
+          mode === "safe" ? t.heroSafeTitle : mode === "guardian" ? t.heroGuardTitle : t.heroCritTitle;
+      }
+      if (heroSub) {
+        heroSub.textContent =
+          mode === "safe" ? t.heroSafeSub : mode === "guardian" ? t.heroGuardSub : t.heroCritSub;
+      }
+      const btnText = document.getElementById("guardian-btn-text");
+      if (btnText) btnText.textContent = t.hitlBtn;
+      return;
+    }
+
+    const copy = TOSS_COPIES[mode] || TOSS_COPIES.critical;
     if (heroTitle) heroTitle.textContent = copy.title;
     if (heroSub) heroSub.textContent = copy.sub;
 
@@ -2084,13 +2559,14 @@
       const btn = document.getElementById(id);
       if (!btn) return;
       btn.removeAttribute("onclick");
-      const topRow = btn.querySelector(".scenario-top");
-      if (topRow && !topRow.querySelector(".ttc-play-pill")) {
-        const pill = document.createElement("span");
-        pill.className = "badge badge-info ttc-play-pill";
-        pill.style.marginLeft = "auto";
-        pill.textContent = label;
-        topRow.appendChild(pill);
+      if (!btn.querySelector(".ttc-scenario-action-row")) {
+        const actionRow = document.createElement("div");
+        actionRow.className = "ttc-scenario-action-row";
+        actionRow.innerHTML = `
+          <span class="ttc-scenario-hint">클릭 시 화자별 음성·채팅 시작</span>
+          <span class="badge badge-info ttc-play-pill">${label}</span>
+        `;
+        btn.appendChild(actionRow);
       }
       btn.addEventListener("click", () => {
         runSequentialLiveSimulation(mode, caseId);
@@ -2128,12 +2604,56 @@
       .replace(/"/g, "&quot;");
   }
 
+  function setupRightStickyIntelligenceSidebar() {
+    const rightCol = document.querySelector(".command-grid > .pane-col:nth-child(3)");
+    if (!rightCol) return;
+    rightCol.classList.add("ttc-right-sticky-col");
+
+    const rightCards = rightCol.querySelectorAll(":scope > .card");
+    if (rightCards[0]) {
+      rightCards[0].classList.add("ttc-live-telemetry-card");
+      const headerBadge = rightCards[0].querySelector(".card-header .badge");
+      if (headerBadge) {
+        headerBadge.id = "ttc-thinking-level-pill";
+      }
+      const verdictBox = document.getElementById("verdict-banner-box");
+      if (verdictBox && !document.getElementById("ttc-live-risk-meter")) {
+        const meter = document.createElement("div");
+        meter.id = "ttc-live-risk-meter";
+        meter.className = "ttc-live-risk-meter";
+        meter.innerHTML = `<div id="ttc-live-risk-fill" class="ttc-live-risk-fill" style="width:94.5%;"></div>`;
+        verdictBox.insertAdjacentElement("afterend", meter);
+      }
+      const cacheBadge = rightCards[0].querySelector(".badge.badge-safe");
+      if (cacheBadge) {
+        cacheBadge.id = "ttc-cache-hit-pill";
+        cacheBadge.textContent = "96.4% Hit · LIVE";
+      }
+      const monoSpans = rightCards[0].querySelectorAll("span");
+      monoSpans.forEach((sp) => {
+        if (sp.textContent && sp.textContent.includes("19,100 tok")) {
+          sp.id = "ttc-cache-tok-label";
+        }
+      });
+    }
+
+    // Hide standalone 3rd card (HITL) in right column since it's now integrated inside the chat stream
+    if (rightCards[2]) {
+      rightCards[2].style.display = "none";
+    }
+  }
+
   async function initBackendConnection() {
+    preloadScenarioAudio();
     buildSidebarAndHero();
+    setupRightStickyIntelligenceSidebar();
     enhanceInjectorButtons();
     ensureWarrantLiveAuditWidget();
     renderInitialChatBubbles("CASE-01");
     applyTossCopy("critical");
+    if (currentUiLang === "en") {
+      setDashboardLang("en");
+    }
 
     const origDispatch = window.triggerGuardianDispatch;
     if (typeof origDispatch === "function") {
