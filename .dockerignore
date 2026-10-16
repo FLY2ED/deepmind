@@ -1,6 +1,7 @@
+.git
 .venv/
 __pycache__/
-*.pyc
+*.py[cod]
 .pytest_cache/
-.git/
+.env
 *.mp4

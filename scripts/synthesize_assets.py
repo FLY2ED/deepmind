@@ -361,13 +361,13 @@ async def synthesize_all_assets() -> dict[str, str]:
     scammer_wav = ASSETS_DIR / "scammer_case01.wav"
     narration_wav = ASSETS_DIR / "narration_en.wav"
 
-    if scammer_tts.get("mode") == "live" and scammer_tts.get("audio_bytes", 0) > 1000:
+    if scammer_tts.get("mode") in ("live", "live_tts") and len(scammer_tts.get("audio_b64", "")) > 1000:
         import base64
         scammer_wav.write_bytes(base64.b64decode(scammer_tts["audio_b64"]))
     else:
         _write_speech_cadence_wav(scammer_wav, duration_sec=6.0, seed_freq=165.0)
 
-    if narration_tts.get("mode") == "live" and narration_tts.get("audio_bytes", 0) > 1000:
+    if narration_tts.get("mode") in ("live", "live_tts") and len(narration_tts.get("audio_b64", "")) > 1000:
         import base64
         narration_wav.write_bytes(base64.b64decode(narration_tts["audio_b64"]))
     else:

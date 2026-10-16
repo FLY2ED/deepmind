@@ -4,10 +4,10 @@
 
 - **Project Name**: **TakeTheCall ("Answer For Me")** — Autonomous Real-Time Voice Phishing Active Defense Agent
 - **Google Cloud & Deployment Links**:
-  - **Google Cloud Run Service URL**: `https://takethecall-us-central1.run.app` *(Cloud Run Serverless Endpoint / Local Demo: `http://localhost:8080`)*
+  - **Google Cloud Run Service URL**: `https://takethecall-27400705822.us-central1.run.app` *(Live Cloud Run Endpoint on `h2gdm-hack26icn-2670` / Local Demo: `http://localhost:8080`)*
   - **Google Cloud Deployment Repository (GitHub)**: https://github.com/FLY2ED/deepmind *(Includes production `Dockerfile` & Cloud Run deployment pipeline)*
   - **Google Cloud Run Deployment Command**:
-    `gcloud run deploy takethecall --source . --region us-central1 --allow-unauthenticated --set-env-vars="GEMINI_API_KEY=${GEMINI_API_KEY}"`
+    `gcloud run deploy takethecall --source . --project h2gdm-hack26icn-2670 --region us-central1 --allow-unauthenticated --set-env-vars="GEMINI_API_KEY=${GEMINI_API_KEY}"`
 - **Project Description**:
   **TakeTheCall** shifts voice phishing defense from passive post-call blacklists to an **Autonomous Real-Time Active Defense Agent** running on **Google Cloud Run**. Built on the 2026 Google GenAI SDK (`google-genai >= 2.30.1`), it steps directly into live scam calls targeting seniors and vulnerable families, audits forged detention warrants sent via mobile messengers against South Korean statutory law in under 2 seconds, and dispatches verified forensic packets to authorities through a 3-Layer Human-in-the-Loop (HITL) safety gate.
 
