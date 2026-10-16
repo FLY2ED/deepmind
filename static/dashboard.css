@@ -1,0 +1,2112 @@
+/* ============================================================================
+ * shadcn/ui New York (Zinc) Official CSS Variables & Component Primitives
+ * + Full-Viewport (100vh) Sidebar Layout & Intuitive Chat Bubble UI
+ * ============================================================================ */
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --primary: 240 5.9% 10%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 240 5.9% 10%;
+  --radius: 0.625rem;
+
+  --sidebar-background: 240 4.8% 97.5%;
+  --sidebar-foreground: 240 5.3% 26.1%;
+  --sidebar-primary: 240 5.9% 10%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 240 4.8% 92.5%;
+  --sidebar-accent-foreground: 240 5.9% 10%;
+  --sidebar-border: 220 13% 91%;
+  --sidebar-ring: 217.2 91.2% 59.8%;
+
+  /* Map existing app variables for light mode compatibility */
+  --bg-canvas: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-muted: #f1f5f9;
+  --bg-subtle: #f8fafc;
+  --bg-accent: #e2e8f0;
+  --border-subtle: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --fg-primary: #09090b;
+  --fg-secondary: #27272a;
+  --fg-muted: #52525b;
+  --fg-subtle: #71717a;
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 5.5%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 0 0% 98%;
+  --primary-foreground: 240 5.9% 10%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 3.7% 14.5%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 346.8 77.2% 49.8%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 240 4.9% 83.9%;
+
+  --sidebar-background: 240 8% 4.5%;
+  --sidebar-foreground: 240 4.8% 95.9%;
+  --sidebar-primary: 0 0% 98%;
+  --sidebar-primary-foreground: 240 5.9% 10%;
+  --sidebar-accent: 240 3.7% 13.5%;
+  --sidebar-accent-foreground: 240 4.8% 95.9%;
+  --sidebar-border: 240 3.7% 14.5%;
+  --sidebar-ring: 217.2 91.2% 59.8%;
+
+  --bg-canvas: #09090b;
+  --bg-card: #0c0c0f;
+  --bg-muted: #18181b;
+  --bg-subtle: #121215;
+  --bg-accent: #27272a;
+  --border-subtle: #1c1c20;
+  --border-hover: #3f3f46;
+  --fg-primary: #fafafa;
+  --fg-secondary: #d4d4d8;
+  --fg-muted: #a1a1aa;
+  --fg-subtle: #71717a;
+}
+
+/* ============================================================================
+ * 1. FULL-VIEWPORT (100vh) SHADCN SIDEBAR + SCROLLABLE SIDEBAR-INSET SHELL
+ * ============================================================================ */
+html,
+body {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.ttc-app-shell {
+  display: grid;
+  grid-template-columns: 256px minmax(0, 1fr);
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background-color: hsl(var(--background));
+}
+
+/* Left Sidebar: fills remaining viewport height cleanly, internal menu scrolls when long */
+.ttc-sidebar {
+  height: 100%;
+  width: 256px;
+  border-right: 1px solid hsl(var(--sidebar-border));
+  background: linear-gradient(180deg, hsl(var(--sidebar-background)) 0%, #09090c 100%);
+  color: hsl(var(--sidebar-foreground));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+  flex-shrink: 0;
+  z-index: 35;
+}
+
+.ttc-sidebar-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid hsl(var(--sidebar-border));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+  background: rgba(24, 24, 27, 0.35);
+}
+
+.ttc-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.ttc-sidebar-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: rgba(244, 63, 94, 0.14);
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  color: #fb7185;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.ttc-sidebar-brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ttc-sidebar-brand-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ttc-sidebar-brand-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: hsl(var(--muted-foreground));
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.ttc-sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ttc-sidebar-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.ttc-sidebar-footer {
+  padding: 10px 12px;
+  border-top: 1px solid hsl(var(--sidebar-border));
+  background-color: rgba(9, 9, 11, 0.9);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ttc-sidebar-health-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  background: rgba(24, 24, 27, 0.75);
+  border: 1px solid hsl(var(--sidebar-border));
+  font-size: 11px;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+}
+
+.ttc-nav-group-label,
+.ttc-sidebar-group-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: hsl(var(--muted-foreground));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 8px;
+  margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ttc-nav-list,
+.ttc-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ttc-nav-item {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  border-radius: 8px;
+  padding: 8px 9px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  transition: background-color 0.14s ease, color 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.ttc-nav-item:hover {
+  background-color: hsl(var(--sidebar-accent));
+  color: hsl(var(--sidebar-accent-foreground));
+  border-color: rgba(63, 63, 70, 0.5);
+}
+
+.ttc-nav-item.active {
+  background: linear-gradient(135deg, rgba(39, 39, 42, 0.9) 0%, rgba(24, 24, 27, 0.95) 100%);
+  color: hsl(var(--foreground));
+  border-color: rgba(82, 82, 91, 0.85);
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+}
+
+.ttc-nav-item-left,
+.ttc-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  flex: 1;
+}
+
+.ttc-nav-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+  color: hsl(var(--muted-foreground));
+  transition: all 0.14s ease;
+}
+
+.ttc-nav-item:hover .ttc-nav-icon {
+  color: hsl(var(--foreground));
+  border-color: var(--border-hover);
+}
+
+.ttc-nav-item.active .ttc-nav-icon {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.ttc-nav-text-wrap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.ttc-nav-label {
+  font-size: 12px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ttc-nav-desc {
+  display: block;
+  font-size: 10px;
+  color: hsl(var(--muted-foreground));
+  font-weight: 400;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ttc-nav-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  background: rgba(24, 24, 27, 0.9);
+  border: 1px solid hsl(var(--sidebar-border));
+  color: hsl(var(--muted-foreground));
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ttc-nav-item.active .ttc-nav-badge {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: rgba(244, 63, 94, 0.45);
+  color: #fda4af;
+}
+
+/* Toss-Style 3-Second Action Summary Card inside Sidebar */
+.ttc-easy-guide-box {
+  margin: 2px 2px 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(24, 24, 27, 0.78) 0%, rgba(15, 15, 18, 0.92) 100%);
+  border: 1px solid hsl(var(--sidebar-border));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.ttc-easy-guide-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: -0.01em;
+}
+
+.ttc-easy-guide-list,
+.ttc-easy-guide-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 11px;
+  line-height: 1.42;
+  color: hsl(var(--muted-foreground));
+  word-break: keep-all;
+}
+
+.ttc-guide-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.ttc-guide-num {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: hsl(var(--foreground));
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.ttc-guide-step strong {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+/* Right Main Area (shadcn SidebarInset): Only this area scrolls */
+.ttc-main-area {
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: hsl(var(--background));
+  scroll-behavior: smooth;
+}
+
+/* Sticky Topbar inside Right Main Area */
+.ttc-main-area .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background-color: hsl(var(--background) / 0.88);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid hsl(var(--border));
+  flex-shrink: 0;
+}
+
+.ttc-main-area .model-strip {
+  flex-shrink: 0;
+  background-color: hsl(var(--card));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.ttc-main-area .dashboard-shell {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 14px 20px 32px;
+  flex: 1;
+}
+
+/* ============================================================================
+ * 2. SHADCN CARD, BUTTON, BADGE & CALLOUT BANNER PRIMITIVES
+ * ============================================================================ */
+.card {
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+  padding: 11px 14px;
+  border-bottom: 1px solid hsl(var(--border));
+  background-color: hsl(var(--muted) / 0.35);
+}
+
+.card-body {
+  padding: 12px 14px;
+}
+
+.kpi-card {
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.08);
+}
+
+/* Toss + shadcn Alert Callout Banner */
+.toss-hero-banner {
+  margin: 14px 20px 0;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.toss-hero-title {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toss-hero-sub {
+  font-size: 12.5px;
+  color: hsl(var(--muted-foreground));
+  margin-top: 3px;
+}
+
+.toss-action-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toss-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 13px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.toss-chip-btn:hover {
+  background-color: hsl(var(--accent));
+  border-color: var(--border-hover);
+}
+
+.toss-chip-btn.primary {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.toss-chip-btn.primary:hover {
+  opacity: 0.92;
+}
+
+/* ============================================================================
+ * 3. INTUITIVE CHAT BUBBLE UI (말풍선 대화창 & 페르소나 말풍선)
+ * ============================================================================ */
+.transcript-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 12px 10px;
+  background-color: hsl(var(--background) / 0.55);
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 1px);
+  max-height: 540px;
+  overflow-y: auto;
+}
+
+.chat-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  animation: chatFadeIn 0.2s ease-out;
+}
+
+@keyframes chatFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Incoming (Scammer / Bank Caller) -> Left Aligned */
+.chat-row.chat-incoming {
+  justify-content: flex-start;
+}
+
+/* Outgoing (AI Grandmother Decoy / Argon Coaching / Shield) -> Right Aligned */
+.chat-row.chat-outgoing {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+/* shadcn Avatar in Chat */
+.chat-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--muted));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  margin-top: 2px;
+}
+
+.chat-avatar.avatar-scammer {
+  background: rgba(244, 63, 94, 0.14);
+  border-color: rgba(244, 63, 94, 0.45);
+  color: #fb7185;
+}
+
+.chat-avatar.avatar-safe {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #34d399;
+}
+
+.chat-avatar.avatar-decoy {
+  background: rgba(59, 130, 246, 0.14);
+  border-color: rgba(59, 130, 246, 0.45);
+  color: #60a5fa;
+}
+
+.chat-avatar.avatar-coaching {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #fbbf24;
+}
+
+.chat-avatar.avatar-interrupt {
+  background: rgba(244, 63, 94, 0.22);
+  border-color: #f43f5e;
+  color: #fda4af;
+}
+
+.chat-col {
+  display: flex;
+  flex-direction: column;
+  max-width: 82%;
+  min-width: 0;
+}
+
+.chat-row.chat-outgoing .chat-col {
+  align-items: flex-end;
+}
+
+.chat-row.chat-incoming .chat-col {
+  align-items: flex-start;
+}
+
+.chat-meta-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  padding: 0 2px;
+  flex-wrap: wrap;
+}
+
+.chat-row.chat-outgoing .chat-meta-line {
+  flex-direction: row-reverse;
+}
+
+.chat-speaker-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.chat-time {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Speech Bubble (말풍선) Core */
+.chat-bubble {
+  position: relative;
+  padding: 10px 13px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  word-break: keep-all;
+}
+
+/* Incoming Bubble (Top-Left Sharp Corner Tail) */
+.chat-row.chat-incoming .chat-bubble {
+  border-radius: 4px 16px 16px 16px;
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.chat-row.chat-incoming.bubble-scammer .chat-bubble {
+  background: rgba(244, 63, 94, 0.07);
+  border-color: rgba(244, 63, 94, 0.32);
+}
+
+.chat-row.chat-incoming.bubble-safe .chat-bubble {
+  background: rgba(16, 185, 129, 0.07);
+  border-color: rgba(16, 185, 129, 0.32);
+}
+
+/* Outgoing Bubble (Top-Right Sharp Corner Tail) */
+.chat-row.chat-outgoing .chat-bubble {
+  border-radius: 16px 4px 16px 16px;
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--foreground));
+}
+
+.chat-row.chat-outgoing.bubble-decoy .chat-bubble {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.chat-row.chat-outgoing.bubble-coaching .chat-bubble {
+  background: rgba(245, 158, 11, 0.09);
+  border-color: rgba(245, 158, 11, 0.38);
+  border-style: dashed;
+}
+
+.chat-row.chat-outgoing.bubble-interrupt .chat-bubble {
+  background: rgba(244, 63, 94, 0.13);
+  border: 1.5px solid rgba(244, 63, 94, 0.55);
+}
+
+.chat-bubble .kr-utterance {
+  font-size: 12.5px;
+  color: hsl(var(--foreground));
+  line-height: 1.5;
+  margin-bottom: 5px;
+}
+
+.chat-bubble .en-telemetry {
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.4;
+  padding-top: 5px;
+  border-top: 1px dashed hsl(var(--border));
+}
+
+/* Interactive Chat Composer Bar (shadcn Input + Button) */
+.ttc-chat-composer {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.ttc-chat-quick-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ttc-quick-pill {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--muted) / 0.6);
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.ttc-quick-pill:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--foreground));
+  border-color: var(--border-hover);
+}
+
+.ttc-chat-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ttc-shadcn-input {
+  flex: 1;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid hsl(var(--input));
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  outline: none;
+  transition: border-color 0.14s, box-shadow 0.14s;
+}
+
+.ttc-shadcn-input:focus {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+}
+
+.ttc-shadcn-send-btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid hsl(var(--primary));
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.12s;
+}
+
+.ttc-shadcn-send-btn:hover {
+  opacity: 0.9;
+}
+
+/* Persona Speech Bubble Styling in Left Pane */
+.persona-quote {
+  position: relative;
+  margin-top: 7px !important;
+  padding: 8px 11px !important;
+  background: hsl(var(--background)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 4px 12px 12px 12px !important;
+  font-size: 11.5px !important;
+  color: hsl(var(--foreground)) !important;
+  line-height: 1.45 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================================================
+ * 4. CASE DICTIONARY DRAWER & RESPONSIVE BREAKPOINTS
+ * ============================================================================ */
+.ttc-cases-drawer {
+  display: none;
+  margin: 14px 20px 16px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ttc-cases-drawer.open {
+  display: block;
+}
+
+.ttc-cases-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.ttc-case-item {
+  padding: 13px 14px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--muted) / 0.4);
+  cursor: pointer;
+  transition: all 0.14s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.ttc-case-item.ttc-case-has-sim {
+  border-color: rgba(16, 185, 129, 0.38);
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(24, 24, 27, 0.55) 100%);
+}
+
+.ttc-case-item:hover {
+  border-color: var(--border-hover);
+  background: hsl(var(--accent));
+  transform: translateY(-1px);
+}
+
+.ttc-case-item.ttc-case-has-sim:hover {
+  border-color: rgba(16, 185, 129, 0.65);
+}
+
+.ttc-case-item.expanded {
+  grid-column: 1 / -1;
+  background: rgba(18, 18, 22, 0.96);
+  border-color: rgba(96, 165, 250, 0.45);
+  transform: none;
+}
+
+.ttc-case-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.ttc-case-sim-btn {
+  flex: 1 1 auto;
+  padding: 7px 11px;
+  border-radius: 6px;
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.16);
+  color: #6ee7b7;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.14s ease;
+}
+
+.ttc-case-sim-btn:hover {
+  background: rgba(16, 185, 129, 0.28);
+  border-color: rgba(16, 185, 129, 0.8);
+  color: #ecfdf5;
+}
+
+.ttc-case-toggle-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: rgba(39, 39, 42, 0.55);
+  color: var(--fg-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.ttc-case-toggle-btn.ttc-case-toggle-full {
+  width: 100%;
+  text-align: center;
+}
+
+.ttc-case-toggle-btn:hover {
+  border-color: var(--border-hover);
+  background: rgba(63, 63, 70, 0.65);
+  color: var(--fg-primary);
+}
+
+.ttc-case-detail-body {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  cursor: default;
+}
+
+.ttc-case-detail-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--fg-muted);
+  background: rgba(24, 24, 27, 0.7);
+  padding: 8px 11px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 10px;
+}
+
+.ttc-case-source-link {
+  color: #60a5fa;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.ttc-case-source-link:hover {
+  text-decoration: underline;
+}
+
+.ttc-case-detail-section {
+  margin-bottom: 10px;
+}
+
+.ttc-case-detail-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--fg-primary);
+  margin-bottom: 5px;
+}
+
+.ttc-case-script-box {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(244, 63, 94, 0.07);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  color: #fecdd3;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.ttc-case-detail-two-col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.ttc-case-detail-list {
+  list-style: none;
+  padding: 9px 11px;
+  margin: 0;
+  border-radius: 6px;
+  background: rgba(24, 24, 27, 0.75);
+  border: 1px solid var(--border-subtle);
+  font-size: 11.5px;
+  color: var(--fg-secondary);
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ttc-case-decoy-box {
+  padding: 9px 12px;
+  border-radius: 6px;
+  background: rgba(59, 130, 246, 0.09);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  color: #bfdbfe;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ttc-case-detail-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+.ttc-case-collapse-btn {
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: rgba(39, 39, 42, 0.7);
+  color: var(--fg-secondary);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+@media (max-width: 960px) {
+  html,
+  body {
+    height: auto;
+    overflow: auto;
+  }
+  .ttc-app-shell {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
+  }
+  .ttc-sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid hsl(var(--sidebar-border));
+  }
+  .ttc-sidebar-scroll {
+    max-height: 220px;
+  }
+  .ttc-main-area {
+    height: auto;
+    overflow: visible;
+  }
+  .chat-col {
+    max-width: 90%;
+  }
+}
+
+/* Live Turn-by-Turn Simulation Stream Styles */
+.ttc-sim-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  font-size: 12px;
+  color: var(--fg-primary);
+}
+.ttc-sim-bar.safe-mode {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+.ttc-sim-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.ttc-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f43f5e;
+  box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7);
+  animation: ttcPulse 1.2s infinite;
+}
+.ttc-sim-bar.safe-mode .ttc-pulse-dot {
+  background: #10b981;
+}
+@keyframes ttcPulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 7px rgba(244, 63, 94, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+}
+.ttc-typing-cursor::after {
+  content: "▋";
+  display: inline-block;
+  margin-left: 3px;
+  color: #f43f5e;
+  animation: ttcBlink 0.65s infinite;
+}
+@keyframes ttcBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.turn-card.ttc-turn-enter {
+  animation: ttcSlideIn 0.28s ease-out;
+}
+@keyframes ttcSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.ioc-row.ttc-ioc-pending {
+  opacity: 0.42;
+}
+.ioc-row.ttc-ioc-hit {
+  opacity: 1;
+  background: rgba(244, 63, 94, 0.08);
+  transition: background 0.35s ease, opacity 0.35s ease;
+}
+.forgery-row.ttc-rule-pending {
+  opacity: 0.32;
+  filter: grayscale(1);
+}
+.forgery-row.ttc-rule-hit {
+  opacity: 1;
+  filter: none;
+  border-left: 3px solid #f43f5e;
+  padding-left: 8px;
+  background: rgba(244, 63, 94, 0.07);
+  transition: all 0.3s ease;
+}
+
+/* Incoming (Ch1) vs Outgoing AI Shield (Ch2) Live Audio Monitor Strip */
+.ttc-audio-monitor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ttc-ch-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--muted) / 0.35);
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+  transition: all 0.2s ease;
+}
+
+.ttc-ch-box.active-caller-danger {
+  background: rgba(244, 63, 94, 0.14);
+  border-color: rgba(244, 63, 94, 0.65);
+  color: #fecdd3;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.18);
+}
+
+.ttc-ch-box.active-caller-safe {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.65);
+  color: #a7f3d0;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.18);
+}
+
+.ttc-ch-box.active-shield {
+  background: rgba(59, 130, 246, 0.14);
+  border-color: rgba(59, 130, 246, 0.65);
+  color: #bfdbfe;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.18);
+}
+
+.ttc-ch-voice-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Active Speaking Glow on Chat Bubble */
+.chat-row.ttc-speaking .chat-bubble {
+  box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.45), 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.chat-row.chat-outgoing.ttc-speaking .chat-bubble {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.45), 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.ttc-replay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  color: hsl(var(--muted-foreground));
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.ttc-replay-btn:hover {
+  color: hsl(var(--foreground));
+  border-color: var(--border-hover);
+  background: hsl(var(--accent));
+}
+
+/* Live Gemini API Telemetry Proof Pill inside Chat Bubbles */
+.ttc-api-proof-slot {
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #93c5fd;
+}
+
+.ttc-api-proof-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #bfdbfe;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.ttc-api-proof-pill.proof-crit {
+  background: rgba(244, 63, 94, 0.14);
+  border-color: rgba(244, 63, 94, 0.4);
+  color: #fecdd3;
+}
+
+.ttc-api-proof-pill.proof-safe {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #a7f3d0;
+}
+
+/* Center Pane Live API Telemetry & Raw JSON Inspector */
+.ttc-live-api-proof-bar {
+  margin-top: 6px;
+  padding: 7px 10px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  background: rgba(15, 23, 42, 0.75);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: #e2e8f0;
+}
+
+.ttc-live-api-proof-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ttc-json-toggle-btn {
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(96, 165, 250, 0.45);
+  background: rgba(30, 58, 138, 0.45);
+  color: #bfdbfe;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.ttc-json-toggle-btn:hover {
+  background: rgba(37, 99, 235, 0.55);
+  color: #ffffff;
+}
+
+.ttc-json-drawer {
+  display: none;
+  margin-top: 7px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #050507;
+  border: 1px solid #27272a;
+  color: #a7f3d0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1.45;
+  max-height: 190px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.ttc-json-drawer.open {
+  display: block;
+}
+
+/* Interactive Multimodal Warrant Audit Box (#warrant-audit-card) */
+.ttc-warrant-live-box {
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid rgba(244, 63, 94, 0.38);
+  background: linear-gradient(180deg, rgba(244, 63, 94, 0.08) 0%, rgba(15, 23, 42, 0.55) 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ttc-warrant-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ttc-warrant-thumb {
+  width: 58px;
+  height: 74px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1.5px solid rgba(244, 63, 94, 0.65);
+  background: #18181b;
+  flex-shrink: 0;
+  cursor: zoom-in;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.ttc-sample-grid-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #fda4af;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.ttc-warrant-sample-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.ttc-sample-card-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 5px;
+  border-radius: 6px;
+  border: 1px solid hsl(var(--border));
+  background: rgba(9, 9, 11, 0.75);
+  color: var(--fg-primary);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.ttc-sample-card-btn:hover {
+  border-color: rgba(244, 63, 94, 0.65);
+  background: rgba(244, 63, 94, 0.12);
+  transform: translateY(-1px);
+}
+
+.ttc-sample-card-btn.active-sample {
+  border-color: #f43f5e;
+  background: rgba(244, 63, 94, 0.18);
+  box-shadow: 0 0 0 1px rgba(244, 63, 94, 0.4);
+}
+
+.ttc-sample-card-btn.sample-safe:hover,
+.ttc-sample-card-btn.sample-safe.active-sample {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.35);
+}
+
+.ttc-sample-card-thumb {
+  width: 100%;
+  height: 52px;
+  object-fit: cover;
+  object-position: top center;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #18181b;
+}
+
+.ttc-sample-card-title {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--fg-primary);
+}
+
+.ttc-sample-card-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(244, 63, 94, 0.2);
+  color: #fecdd3;
+}
+
+.ttc-sample-card-btn.sample-safe .ttc-sample-card-tag {
+  background: rgba(16, 185, 129, 0.2);
+  color: #a7f3d0;
+}
+
+.ttc-warrant-dropzone {
+  border: 1.5px dashed rgba(96, 165, 250, 0.45);
+  background: rgba(30, 58, 138, 0.16);
+  border-radius: 6px;
+  padding: 7px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #bfdbfe;
+}
+
+.ttc-warrant-dropzone:hover,
+.ttc-warrant-dropzone.drag-over {
+  border-color: #60a5fa;
+  background: rgba(37, 99, 235, 0.28);
+  color: #ffffff;
+}
+
+.ttc-warrant-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ttc-warrant-audit-btn {
+  flex: 1;
+  min-width: 150px;
+  padding: 7px 10px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid rgba(244, 63, 94, 0.65);
+  background: rgba(244, 63, 94, 0.22);
+  color: #ffe4e6;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.ttc-warrant-audit-btn:hover {
+  background: rgba(244, 63, 94, 0.36);
+  color: #ffffff;
+}
+
+.ttc-warrant-upload-label {
+  padding: 6px 10px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid rgba(96, 165, 250, 0.45);
+  background: rgba(30, 58, 138, 0.35);
+  color: #dbeafe;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.14s ease;
+}
+
+.ttc-warrant-upload-label:hover {
+  background: rgba(37, 99, 235, 0.5);
+  color: #ffffff;
+}
+
+.ttc-warrant-live-result {
+  padding: 7px 9px;
+  border-radius: 5px;
+  background: rgba(9, 9, 11, 0.82);
+  border: 1px solid #27272a;
+  font-size: 10.5px;
+  line-height: 1.42;
+  color: var(--fg-secondary);
+}
+
+/* Chat Composer Warrant Image Quick Bar */
+.ttc-chat-image-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 4px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.ttc-img-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(244, 63, 94, 0.45);
+  background: rgba(244, 63, 94, 0.13);
+  color: #fecdd3;
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.ttc-img-pill:hover {
+  background: rgba(244, 63, 94, 0.28);
+  color: #ffffff;
+}
+
+.ttc-img-pill.pill-safe {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.13);
+  color: #a7f3d0;
+}
+
+.ttc-img-pill.pill-safe:hover {
+  background: rgba(16, 185, 129, 0.28);
+  color: #ffffff;
+}
+
+.ttc-img-pill.pill-upload {
+  border-color: rgba(96, 165, 250, 0.5);
+  background: rgba(37, 99, 235, 0.2);
+  color: #bfdbfe;
+}
+
+.ttc-img-pill.pill-upload:hover {
+  background: rgba(37, 99, 235, 0.38);
+  color: #ffffff;
+}
+
+/* Attached Document Image inside Chat Bubble */
+.ttc-chat-doc-attachment {
+  margin-bottom: 8px;
+  padding: 7px;
+  border-radius: 6px;
+  background: rgba(9, 9, 11, 0.65);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ttc-chat-doc-attachment.doc-safe {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.ttc-chat-doc-img {
+  width: 72px;
+  height: 92px;
+  object-fit: cover;
+  object-position: top center;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  cursor: zoom-in;
+  flex-shrink: 0;
+  background: #18181b;
+}
+
+.ttc-chat-doc-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+}
+
+.ttc-warrant-card-highlight {
+  animation: ttcWarrantPulse 1.4s ease-out;
+}
+
+@keyframes ttcWarrantPulse {
+  0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.75); }
+  50% { box-shadow: 0 0 0 6px rgba(244, 63, 94, 0.25); }
+  100% { box-shadow: none; }
+}
+
+
+/* ============================================================================
+ * 5. INTEGRATED A + C + D + TOSS UX UPGRADES:
+ *    - [C] Clean 2-Pane Workspace + Sticky Right Intelligence Sidebar
+ *    - [D] Warrant Vision Laser Scan + 3 Red Dashed Forgery Bounding Boxes
+ *    - [A] Inline Chat HITL Guardian Approval Card inside #transcript-container
+ *    - Live Real-Time Kill-Chain & Byte-0 Prefix Cache Streaming Indicators
+ * ============================================================================ */
+
+/* Clean 2-Column Workspace: Left/Center Main Stage (1fr) + Sticky Right Sidebar (395px) */
+.command-grid.ttc-two-pane-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 395px;
+  gap: 16px;
+  align-items: start;
+}
+
+.ttc-main-stage-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* Sticky Right Intelligence Sidebar */
+.ttc-right-sticky-col {
+  position: sticky;
+  top: 64px;
+  max-height: calc(100vh - 78px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 2px;
+  z-index: 25;
+}
+
+.ttc-right-sticky-col > .card {
+  border-color: rgba(63, 63, 70, 0.85);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Live Real-Time Kill-Chain & Argon 2-Tier Card Enhancements */
+.ttc-live-telemetry-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(244, 63, 94, 0.35) !important;
+  background: linear-gradient(180deg, rgba(24, 24, 27, 0.65) 0%, rgba(12, 12, 15, 0.98) 100%) !important;
+}
+
+.ttc-live-telemetry-card.safe-state {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+.ttc-thinking-pill-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.45);
+  color: #fda4af;
+}
+
+.ttc-thinking-pill-live.safe-mode {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #6ee7b7;
+}
+
+.ttc-live-risk-meter {
+  margin-top: 8px;
+  margin-bottom: 10px;
+}
+
+.ttc-live-risk-track {
+  height: 7px;
+  width: 100%;
+  background: #18181b;
+  border-radius: 9999px;
+  overflow: hidden;
+  border: 1px solid #27272a;
+}
+
+.ttc-live-risk-fill {
+  height: 100%;
+  width: 94.5%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #f59e0b 0%, #f43f5e 65%, #e11d48 100%);
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.55);
+}
+
+.ttc-live-risk-fill.safe-fill {
+  background: linear-gradient(90deg, #10b981, #34d399);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+@keyframes kcPulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.45); }
+  50% { box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.15); }
+}
+
+.kc-step.kc-current-stage {
+  animation: kcPulseGlow 1.5s infinite;
+  border-color: #fb7185 !important;
+  font-weight: 700;
+}
+
+@keyframes cacheShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.cache-bar-fill {
+  background: linear-gradient(90deg, #10b981 0%, #34d399 50%, #10b981 100%) !important;
+  background-size: 200% 100% !important;
+  animation: cacheShimmer 2.8s linear infinite;
+  transition: width 0.4s ease;
+}
+
+/* [D] Persona-Style Warrant Laser Scanner + 3 Forgery Bounding Boxes */
+@keyframes warrantLaserScan {
+  0% { top: 6%; opacity: 0.85; }
+  50% { top: 90%; opacity: 1; }
+  100% { top: 6%; opacity: 0.85; }
+}
+
+.ttc-warrant-scanner-doc {
+  position: relative;
+  border-radius: 10px;
+  background: #111217;
+  border: 1px solid rgba(63, 63, 70, 0.9);
+  padding: 12px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vision-scan-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #f43f5e, #fb7185, #f43f5e, transparent);
+  box-shadow: 0 0 12px #f43f5e;
+  animation: warrantLaserScan 3.2s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.ttc-warrant-doc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid #27272a;
+}
+
+.ttc-bbox-marker {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1.5px dashed rgba(244, 63, 94, 0.85);
+  background: rgba(244, 63, 94, 0.09);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.ttc-bbox-marker:hover {
+  transform: translateX(2px);
+  background: rgba(244, 63, 94, 0.14);
+}
+
+.ttc-bbox-marker.bbox-amber {
+  border-color: rgba(245, 158, 11, 0.85);
+  background: rgba(245, 158, 11, 0.09);
+}
+
+.ttc-bbox-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #a1a1aa;
+}
+
+.ttc-bbox-meta strong {
+  color: #fafafa;
+}
+
+.ttc-bbox-reason {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #fda4af;
+  margin-top: 2px;
+}
+
+.ttc-bbox-marker.bbox-amber .ttc-bbox-reason {
+  color: #fde68a;
+}
+
+.ttc-bbox-tag {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  background: #f43f5e;
+  color: #ffffff;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ttc-bbox-marker.bbox-amber .ttc-bbox-tag {
+  background: #f59e0b;
+  color: #09090b;
+}
+
+/* [A] Inline HITL Guardian Approval Card Inside Chat Stream (#transcript-container) */
+.ttc-chat-hitl-card {
+  margin-top: 4px;
+  padding: 13px 15px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(24, 24, 29, 0.96), rgba(12, 13, 17, 0.98));
+  border: 1.5px solid rgba(52, 211, 153, 0.45);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  animation: chatFadeIn 0.25s ease-out;
+}
+
+.ttc-chat-hitl-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ttc-chat-hitl-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #fafafa;
+}
+
+.ttc-chat-hitl-desc {
+  font-size: 11.5px;
+  color: #d4d4d8;
+  line-height: 1.45;
+}
+
+.ttc-chat-hitl-stamps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ttc-chat-hitl-stamp {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(24, 24, 27, 0.9);
+  border: 1px solid rgba(82, 82, 91, 0.7);
+  color: #e4e4e7;
+}
+
+.ttc-chat-hitl-btn {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #fafafa;
+  background: #fafafa;
+  color: #09090b;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.12);
+}
+
+.ttc-chat-hitl-btn:hover {
+  background: #e4e4e7;
+  transform: translateY(-1px);
+}
+
+.ttc-chat-hitl-btn.dispatched {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.65);
+  color: #6ee7b7;
+}
+
+.ttc-chat-hitl-toast {
+  display: none;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: rgba(6, 78, 59, 0.35);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  font-size: 11px;
+  line-height: 1.5;
+  color: #d1fae5;
+}
+
+.ttc-chat-hitl-toast.visible {
+  display: block;
+}
+
+/* Sidebar Scenario Quick-Switchers & Foreign Resident Shield */
+.ttc-side-scen-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ttc-side-scen-btn {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1px solid hsl(var(--border));
+  background: rgba(24, 24, 27, 0.55);
+  color: hsl(var(--foreground));
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.ttc-side-scen-btn:hover {
+  border-color: var(--border-hover);
+  background: rgba(39, 39, 42, 0.7);
+}
+
+.ttc-side-scen-btn.active-crit {
+  background: rgba(244, 63, 94, 0.1);
+  border-color: rgba(244, 63, 94, 0.5);
+}
+
+.ttc-side-scen-btn.active-safe {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.ttc-side-expat-box {
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(24, 24, 27, 0.65);
+  border: 1px solid hsl(var(--border));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (max-width: 1180px) {
+  .command-grid.ttc-two-pane-layout {
+    grid-template-columns: 1fr;
+  }
+  .ttc-right-sticky-col {
+    position: static;
+    max-height: none;
+  }
+}
+
+/* ============================================================================
+ * 6. LEFT PANE & SCENARIO INJECTOR CARD ALIGNMENT FIXES (Prevent text crushing)
+ * ============================================================================ */
+.card-header {
+  flex-wrap: nowrap;
+}
+
+.card-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.card-header > .badge {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.scenario-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 11px;
+}
+
+.scenario-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: nowrap;
+  margin-bottom: 1px;
+}
+
+.scenario-top > .badge {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.scenario-dur {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--fg-subtle);
+  white-space: nowrap;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ttc-scenario-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.ttc-play-pill {
+  font-size: 10px !important;
+  padding: 2px 7px !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.warrant-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.warrant-header-bar > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.warrant-header-bar > .badge {
+  white-space: nowrap;
+  flex-shrink: 0;
+}

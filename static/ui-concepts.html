@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>대신받아 TakeTheCall — 통합 시안 (A + C + D + 토스형 UX)</title>
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: #09090b;
+      color: #fafafa;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; }
+
+    /* 메신저 말풍선 꼬리 곡률 */
+    .bubble-in {
+      border-radius: 4px 18px 18px 18px;
+    }
+    .bubble-out {
+      border-radius: 18px 4px 18px 18px;
+    }
+
+    /* 비전 스캔 애니메이션 라인 */
+    @keyframes scanline {
+      0% { top: 8%; opacity: 0.85; }
+      50% { top: 88%; opacity: 1; }
+      100% { top: 8%; opacity: 0.85; }
+    }
+    .vision-scan-bar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #f43f5e, #fb7185, #f43f5e, transparent);
+      box-shadow: 0 0 12px #f43f5e;
+      animation: scanline 3.4s ease-in-out infinite;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- =========================================================================
+       통합 마스터 시안:
+       [C] Linear 100vh 좌측 사이드바 + 우측 2단(중앙 대화 스테이지 + 우측 인스펙터) 독립 스크롤
+       [A] Retell AI 스타일 대형 통화 상태바 + 직관적인 양방향 메신저 말풍선
+       [D] Persona 스타일 위조 구속영장 비전 바운딩박스 스캐너
+       [Toss] 모든 타이틀·라벨·설명을 토스식 친절하고 쉬운 해요체 UX 라이팅으로 통일
+       ========================================================================= -->
+  <div class="grid grid-cols-[264px_minmax(0,1fr)] w-screen h-screen overflow-hidden bg-[#09090b]">
+
+    <!-- 1. 좌측 100vh 고정 사이드바 (메뉴가 길어지면 내부만 독립 스크롤) -->
+    <aside class="h-screen w-[264px] border-r border-zinc-800/90 bg-[#070709] flex flex-col overflow-hidden select-none">
+      <!-- 사이드바 헤더 -->
+      <div class="px-4 py-4 border-b border-zinc-800/80 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-white text-zinc-950 flex items-center justify-center font-black text-sm shadow">
+            🛡️
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-extrabold text-[15px] tracking-tight text-white">대신받아</span>
+              <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 border border-blue-500/30">A+C+D 시안</span>
+            </div>
+            <p class="text-[11px] text-zinc-400">AI 보이스피싱 안심 방패</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 사이드바 메뉴 영역 (길어지면 독립 스크롤) -->
+      <div class="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+        <div>
+          <div class="px-2.5 mb-2 flex items-center justify-between text-[11px] font-semibold text-zinc-500">
+            <span>안심 보호 메뉴</span>
+            <span class="font-mono text-[10px]">WORKSPACE</span>
+          </div>
+          <nav class="space-y-1">
+            <button onclick="setPreviewTab('all', this)" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-zinc-800/90 text-white border border-zinc-700/80 text-left transition">
+              <div class="flex items-center gap-2.5">
+                <span class="w-7 h-7 rounded-lg bg-white text-zinc-950 flex items-center justify-center text-xs font-bold">📞</span>
+                <div>
+                  <div class="text-xs font-bold">한눈에 보는 통화 보호</div>
+                  <div class="text-[10.5px] text-zinc-400">실시간 말풍선 · 가짜영장 스캔</div>
+                </div>
+              </div>
+              <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-rose-500/20 text-rose-400 border border-rose-500/30">방어중</span>
+            </button>
+
+            <button onclick="setPreviewTab('call', this)" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 text-left transition">
+              <div class="flex items-center gap-2.5">
+                <span class="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs">💬</span>
+                <div>
+                  <div class="text-xs font-semibold">AI 대신 받기 대화창</div>
+                  <div class="text-[10.5px] text-zinc-500">김순자 할머니 AI 시간 끌기</div>
+                </div>
+              </div>
+            </button>
+
+            <button onclick="setPreviewTab('warrant', this)" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 text-left transition">
+              <div class="flex items-center gap-2.5">
+                <span class="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs">🔍</span>
+                <div>
+                  <div class="text-xs font-semibold">카톡 구속영장 진위 스캔</div>
+                  <div class="text-[10.5px] text-zinc-500">비전 AI 위조 부위 빨간박스 표시</div>
+                </div>
+              </div>
+              <span class="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-amber-500/15 text-amber-400">위조 3곳</span>
+            </button>
+
+            <button onclick="setPreviewTab('guardian', this)" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 text-left transition">
+              <div class="flex items-center gap-2.5">
+                <span class="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs">👨‍👩‍👧</span>
+                <div>
+                  <div class="text-xs font-semibold">가족 알림 · 기관 원탭 신고</div>
+                  <div class="text-[10.5px] text-zinc-500">112 경찰 · 1332 금감원 · 지급정지</div>
+                </div>
+              </div>
+            </button>
+          </nav>
+        </div>
+
+        <!-- 시나리오 원탭 전환 (토스형 쉬운 라벨) -->
+        <div>
+          <div class="px-2.5 mb-2 flex items-center justify-between text-[11px] font-semibold text-zinc-500">
+            <span>상황별 체험하기</span>
+            <span class="font-mono text-[10px]">SCENARIO</span>
+          </div>
+          <div class="space-y-1.5">
+            <button onclick="switchDemoScenario('critical')" id="side-scen-crit" class="w-full p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/40 text-left transition">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-rose-400">🔴 검찰 사칭 + 가짜 카톡영장</span>
+                <span class="text-[10px] font-mono text-zinc-400">00:52</span>
+              </div>
+              <p class="text-[11px] text-zinc-300 mt-1">12억 대포통장 협박 · 원격앱 유도</p>
+            </button>
+
+            <button onclick="switchDemoScenario('safe')" id="side-scen-safe" class="w-full p-2.5 rounded-xl bg-zinc-900/70 border border-zinc-800 hover:border-zinc-700 text-left transition">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-emerald-400">🟢 신한은행 예금 만기 안내</span>
+                <span class="text-[10px] font-mono text-zinc-500">00:15</span>
+              </div>
+              <p class="text-[11px] text-zinc-400 mt-1">정상 전화 · 방해 없이 조용히 통과</p>
+            </button>
+          </div>
+        </div>
+
+        <!-- 다국어 거주 외국인 보호 스위치 -->
+        <div class="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/90 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-zinc-200">🌏 외국인 주민 통역 보호</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400">Live 번역</span>
+          </div>
+          <p class="text-[11px] text-zinc-400 leading-relaxed" id="sidebar-expat-text">
+            "한국 검찰은 절대 카톡으로 영장을 보내거나 안전계좌 이체를 요구하지 않아요."
+          </p>
+          <div class="grid grid-cols-3 gap-1 pt-1 text-[10.5px]">
+            <button onclick="setExpatLang('KO')" class="py-1 rounded bg-zinc-800 text-white font-semibold">한국어</button>
+            <button onclick="setExpatLang('EN')" class="py-1 rounded bg-zinc-950 text-zinc-400 hover:text-white">English</button>
+            <button onclick="setExpatLang('VI')" class="py-1 rounded bg-zinc-950 text-zinc-400 hover:text-white">Tiếng Việt</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 사이드바 하단 고정 상태 카드 -->
+      <div class="p-3.5 border-t border-zinc-800/80 bg-[#070709] space-y-2 shrink-0">
+        <div class="p-2.5 rounded-xl bg-zinc-900/90 border border-zinc-800">
+          <div class="flex items-center justify-between text-[11px] font-semibold text-zinc-200">
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>AI 두뇌 연결 완료</span>
+            <span class="font-mono text-[10px] text-emerald-400">96.4% 캐시</span>
+          </div>
+          <p class="text-[10.5px] text-zinc-400 mt-1">형사소송법 6대 법령 · 사기 사례 20건 기억 중</p>
+        </div>
+        <a href="/" class="block w-full text-center py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition">
+          ← 현재 메인 대시보드(:8080)로 돌아가기
+        </a>
+      </div>
+    </aside>
+
+    <!-- 2. 우측 메인 공간 (사이드바 제외 이 영역만 세로 스크롤됨) -->
+    <div class="h-screen overflow-y-auto overflow-x-hidden flex flex-col bg-[#09090b]">
+
+      <!-- 상단 고정 헤더 (Linear 스타일 브레드크럼 + 토스형 상태 요약) -->
+      <header class="sticky top-0 z-40 h-14 px-6 border-b border-zinc-800/80 bg-[#09090b]/90 backdrop-blur-md flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <span class="text-xs font-semibold text-zinc-400">실시간 통화 보호 워크스페이스</span>
+          <span class="text-zinc-700">/</span>
+          <span id="top-breadcrumb-title" class="text-xs font-bold text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+            서울중앙지검 사칭 의심 전화 방어 중 (CASE-01)
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-300">
+            🎙️ 내 목소리 보호 모드 <strong class="text-emerald-400">켜짐</strong>
+          </span>
+          <span class="px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-zinc-400">
+            Gemini 3.8 Live + Argon 4
+          </span>
+        </div>
+      </header>
+
+      <!-- 메인 콘텐츠 컨테이너 -->
+      <main class="max-w-[1560px] w-full mx-auto px-6 py-5 space-y-5 flex-1">
+
+        <!-- [토스형 히어로 요약 배너] 누구나 1초 만에 상황을 이해하는 큰 안내판 -->
+        <section id="hero-callout" class="p-5 rounded-2xl bg-gradient-to-r from-rose-950/40 via-zinc-900/95 to-zinc-900 border border-rose-500/35 flex flex-wrap items-center justify-between gap-4 shadow-lg">
+          <div class="flex items-start gap-4">
+            <div id="hero-icon" class="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-2xl shrink-0">
+              🚨
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="hero-badge" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-500 text-white">위험도 99.4% · 즉시 보호 발동</span>
+                <span id="hero-sub-badge" class="text-xs text-rose-300 font-medium">형사소송법 제85조 위반 등 위조 증거 6건 발견</span>
+              </div>
+              <h1 id="hero-title" class="text-lg md:text-xl font-extrabold text-white mt-1 tracking-tight">
+                잠깐! 전형적인 검찰 사칭 보이스피싱 전화예요
+              </h1>
+              <p id="hero-desc" class="text-xs md:text-[13px] text-zinc-300 mt-0.5">
+                검찰이나 금융감독원은 절대 카카오톡으로 구속영장을 보내거나 원격제어 앱 설치·안전계좌 이체를 요구하지 않아요.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2.5 shrink-0">
+            <button onclick="switchDemoScenario('safe')" class="px-3.5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-xs font-semibold text-zinc-200 transition">
+              🟢 정상 전화일 때 보기
+            </button>
+            <button onclick="triggerDemoDispatch()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-extrabold shadow transition">
+              👨‍👩‍👧 가족에게 알리고 112 · 1332 한 번에 신고하기 →
+            </button>
+          </div>
+        </section>
+
+        <!-- [토스형 4대 핵심 지표 카드] 기술 용어 대신 직관적인 한국어 설명 -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div class="p-4 rounded-2xl bg-[#0d0e12] border border-zinc-800/90 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-xs text-zinc-400">
+              <span>지금 통화 위험도</span>
+              <span id="kpi-1-badge" class="px-2 py-0.5 rounded text-[10.5px] font-bold bg-rose-500/15 text-rose-400">매우 위험</span>
+            </div>
+            <div class="mt-2 flex items-baseline justify-between">
+              <span id="kpi-1-val" class="text-2xl font-black text-rose-400">99.4%</span>
+              <span id="kpi-1-sub" class="text-[11px] text-zinc-400">검찰 사칭 + 가짜 영장</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-[#0d0e12] border border-zinc-800/90 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-xs text-zinc-400">
+              <span>누가 전화를 받고 있나요?</span>
+              <span class="px-2 py-0.5 rounded text-[10.5px] font-bold bg-sky-500/15 text-sky-400">AI 대역 응대중</span>
+            </div>
+            <div class="mt-2 flex items-baseline justify-between">
+              <span class="text-xl font-extrabold text-white">김순자 할머니 AI</span>
+              <span class="text-[11px] text-zinc-400">통화 끊김 0초 · 자연스러운 지연</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-[#0d0e12] border border-zinc-800/90 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-xs text-zinc-400">
+              <span>카톡 서류·영장 판독 결과</span>
+              <span id="kpi-3-badge" class="px-2 py-0.5 rounded text-[10.5px] font-bold bg-amber-500/15 text-amber-400">6대 법령 대조</span>
+            </div>
+            <div class="mt-2 flex items-baseline justify-between">
+              <span id="kpi-3-val" class="text-xl font-extrabold text-amber-400">100% 가짜 서류</span>
+              <span id="kpi-3-sub" class="text-[11px] text-zinc-400">판사 서명 누락 · 가짜 직인</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-[#0d0e12] border border-zinc-800/90 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-xs text-zinc-400">
+              <span>모아둔 신고 증거 (IOC)</span>
+              <span class="px-2 py-0.5 rounded text-[10.5px] font-bold bg-emerald-500/15 text-emerald-400">자동 채증 완료</span>
+            </div>
+            <div class="mt-2 flex items-baseline justify-between">
+              <span id="kpi-4-val" class="text-xl font-extrabold text-emerald-400">5가지 단서 확보</span>
+              <span class="text-[11px] text-zinc-400">대포통장 · 피싱주소 · 사건번호</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================================================================
+             [C] Linear 2-Pane 메인 워크스페이스
+             - 좌측(7칸): [A] Retell AI 스타일 실시간 통화 파형 + 큼직한 메신저 말풍선 대화창
+             - 우측(5칸): [D] Persona 스타일 위조 영장 비전 스캐너 + 채증 단서 표 + 원탭 가족 신고
+             ================================================================= -->
+        <section id="workspace-grid" class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+          <!-- 좌측 7칸 (시안 A): 실시간 통화 스테이지 & 메신저 말풍선 대화창 -->
+          <div id="pane-call" class="lg:col-span-7 rounded-2xl bg-[#0c0d11] border border-zinc-800/90 overflow-hidden flex flex-col shadow-xl">
+            <!-- 통화 스테이지 상단 바 -->
+            <div class="p-4 border-b border-zinc-800/80 bg-zinc-900/50 flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-lg">
+                  📞
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span id="call-header-title" class="text-sm font-bold text-white">실시간 통화 대화창 (AI가 대신 대화 중)</span>
+                    <span class="px-2 py-0.5 rounded-md text-[10.5px] font-mono bg-zinc-800 text-zinc-300">00:49 진행중</span>
+                  </div>
+                  <p class="text-xs text-zinc-400 mt-0.5">왼쪽은 <strong class="text-rose-300">전화 건 상대방</strong>, 오른쪽은 <strong class="text-sky-300">대신 전화를 받은 우리 AI 방패</strong>의 말풍선이에요.</p>
+                </div>
+              </div>
+
+              <!-- 실시간 양방향 음성 파형 미니 바 -->
+              <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-800">
+                <span class="text-[11px] text-rose-400 font-semibold">상대방</span>
+                <div class="flex items-end gap-0.5 h-5">
+                  <span class="w-1 h-2 bg-rose-500 rounded"></span>
+                  <span class="w-1 h-5 bg-rose-500 rounded animate-pulse"></span>
+                  <span class="w-1 h-3 bg-rose-500 rounded"></span>
+                  <span class="w-1 h-4 bg-sky-400 rounded"></span>
+                  <span class="w-1 h-5 bg-sky-400 rounded animate-pulse"></span>
+                  <span class="w-1 h-2 bg-sky-400 rounded"></span>
+                </div>
+                <span class="text-[11px] text-sky-400 font-semibold">AI 할머니</span>
+              </div>
+            </div>
+
+            <!-- 메신저 말풍선 스트림 -->
+            <div id="chat-stream" class="p-5 space-y-4 max-h-[540px] overflow-y-auto bg-[#090a0d]">
+
+              <!-- Turn 1: 사기범 (왼쪽 말풍선) -->
+              <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-base shrink-0 mt-0.5">
+                  🚨
+                </div>
+                <div class="max-w-[82%]">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-bold text-rose-300">전화 건 사람 (서울중앙지검 김O훈 수사관 사칭)</span>
+                    <span class="text-[10.5px] font-mono text-zinc-500">00:12</span>
+                  </div>
+                  <div class="bubble-in bg-rose-950/25 border border-rose-500/30 p-3.5 text-[13px] leading-relaxed text-zinc-100 shadow-sm">
+                    "서울중앙지검 반부패수사1부입니다. 김순자 씨 명의 통장이 <span class="bg-rose-500/25 text-rose-200 px-1.5 py-0.5 rounded font-semibold">12억 원 자금세탁</span>에 사용됐습니다. 지금 카톡으로 <span class="bg-rose-500/25 text-rose-200 px-1.5 py-0.5 rounded font-semibold">사건번호 2026형제4821호 구속영장</span> 보냈으니 혼자 있는 방으로 가서 열어보세요!"
+                  </div>
+                </div>
+              </div>
+
+              <!-- Turn 2: AI 김순자 할머니 미끼 (오른쪽 말풍선) -->
+              <div class="flex items-start gap-3 flex-row-reverse">
+                <div class="w-9 h-9 rounded-full bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-base shrink-0 mt-0.5">
+                  👵
+                </div>
+                <div class="max-w-[82%] flex flex-col items-end">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-[10.5px] font-mono text-zinc-500">00:19</span>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-500/15 text-sky-300">시간 끌기 + 단서 유도중</span>
+                    <span class="text-xs font-bold text-sky-300">AI 김순자 할머니 (대신 통화중)</span>
+                  </div>
+                  <div class="bubble-out bg-sky-500/15 border border-sky-500/35 p-3.5 text-[13px] leading-relaxed text-zinc-100 shadow-sm">
+                    "아이고 세상에, 수사관님 제가 교직에서 은퇴하고 통장 빌려준 적도 없는데 손이 떨리네요… 잠시만요 돋보기 좀 찾게요. 거기 부서 전화번호랑 돈 보내라는 계좌번호를 천천히 다시 불러주셔요."
+                  </div>
+                </div>
+              </div>
+
+              <!-- Turn 3: Argon 실시간 법령 귓속말 코칭 (오른쪽 점선 말풍선) -->
+              <div class="flex items-start gap-3 flex-row-reverse">
+                <div class="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-base shrink-0 mt-0.5">
+                  🧠
+                </div>
+                <div class="max-w-[82%] flex flex-col items-end">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-[10.5px] font-mono text-zinc-500">00:29</span>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300">형사소송법 제85조 대조 완료</span>
+                    <span class="text-xs font-bold text-amber-300">AI 법률 두뇌 (실시간 귓속말 코칭)</span>
+                  </div>
+                  <div class="bubble-out bg-amber-500/10 border border-dashed border-amber-500/45 p-3.5 text-[13px] leading-relaxed text-amber-50 shadow-sm">
+                    "수사관님, 우리 딸이 그러는데 <span class="bg-amber-500/25 text-amber-200 px-1.5 py-0.5 rounded font-semibold">형사소송법 제85조</span>에 구속영장은 무조건 종이 원본을 직접 보여줘야 하고 카톡 영장은 100% 가짜라던데, <span class="underline decoration-amber-400">대검찰청 찐센터(1301)</span>에 이 사건번호 지금 물어봐도 되죠?"
+                  </div>
+                </div>
+              </div>
+
+              <!-- Turn 4: 사기범 당황 + 원격앱/안전계좌 강요 (왼쪽 말풍선) -->
+              <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-base shrink-0 mt-0.5">
+                  🚨
+                </div>
+                <div class="max-w-[82%]">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-bold text-rose-300">전화 건 사람 (Stage 4 원격제어·송금 협박)</span>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500 text-white">최고 위험 감지</span>
+                    <span class="text-[10.5px] font-mono text-zinc-500">00:38</span>
+                  </div>
+                  <div class="bubble-in bg-rose-950/30 border border-rose-500/40 p-3.5 text-[13px] leading-relaxed text-zinc-100 shadow-sm">
+                    "지금 기밀 수사 중이라 가족이나 은행원한테 말하면 즉시 구속입니다! 당장 <span class="bg-rose-500/25 text-rose-200 px-1.5 py-0.5 rounded font-semibold">http://spo-go-kr.net</span> 눌러서 <span class="bg-rose-500/25 text-rose-200 px-1.5 py-0.5 rounded font-semibold">TeamViewer 원격앱</span> 깔고 <span class="bg-rose-500/25 text-rose-200 px-1.5 py-0.5 rounded font-semibold">국민 482-91-XXXX 안전계좌</span>로 전액 이체하세요!"
+                  </div>
+                </div>
+              </div>
+
+              <!-- Turn 5: AI 안전 방패 즉시 차단 (오른쪽 강조 말풍선) -->
+              <div class="flex items-start gap-3 flex-row-reverse">
+                <div class="w-9 h-9 rounded-full bg-rose-600 text-white flex items-center justify-center text-base shrink-0 mt-0.5 shadow-lg">
+                  🛡️
+                </div>
+                <div class="max-w-[84%] flex flex-col items-end">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-[10.5px] font-mono text-zinc-500">00:47</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500 text-white">INTERRUPT · 통화 즉시 차단</span>
+                    <span class="text-xs font-bold text-rose-300">AI 안전 방패 자동 개입</span>
+                  </div>
+                  <div class="bubble-out bg-gradient-to-br from-rose-950/80 to-zinc-900 border-2 border-rose-500/70 p-3.5 text-[13px] leading-relaxed text-white shadow-md">
+                    "🛑 <strong>[통화를 안전하게 차단했어요]</strong> 원격제어 앱 설치와 안전계좌 송금 요구가 감지되어 사기범 음성을 즉시 음소거했습니다. 수집된 5가지 범죄 단서를 가족과 경찰청(112)·금감원(1332) 신고 양식으로 정리했습니다."
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- 하단: 직접 테스트해 볼 수 있는 말풍선 입력바 -->
+            <div class="p-3.5 border-t border-zinc-800/80 bg-zinc-900/60 space-y-2">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-[11px] font-semibold text-zinc-400">💬 원탭으로 사기 멘트 던져보기:</span>
+                <button onclick="appendTestBubble('카톡으로 보낸 구속영장 확인하시고 지금 바로 안전계좌로 입금하세요!')" class="px-2.5 py-1 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-[11px] text-zinc-200 transition">
+                  "카톡 영장 확인하고 안전계좌 입금하세요"
+                </button>
+                <button onclick="appendTestBubble('휴대폰 원격점검을 위해 TeamViewer 앱을 지금 설치해 주세요.')" class="px-2.5 py-1 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-[11px] text-zinc-200 transition">
+                  "TeamViewer 원격앱 설치해 주세요"
+                </button>
+              </div>
+              <form onsubmit="handleCustomInput(event)" class="flex items-center gap-2">
+                <input id="custom-chat-input" type="text" placeholder="여기에 의심되는 전화 멘트를 입력하면 말풍선으로 AI 방어 답변이 바로 달립니다..." class="flex-1 h-9 px-3.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white focus:outline-none focus:border-zinc-500" />
+                <button type="submit" class="h-9 px-4 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs shrink-0 transition">
+                  말풍선 보내기
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- 우측 5칸 (시안 D + C): 위조 구속영장 비전 스캐너 + 5대 범죄단서 인스펙터 + 원탭 가족 승인 -->
+          <div id="pane-inspector" class="lg:col-span-5 space-y-4">
+
+            <!-- 1. [시안 D] 카톡 위조 구속영장 비전 AI 바운딩박스 스캐너 -->
+            <div id="card-warrant" class="rounded-2xl bg-[#0c0d11] border border-zinc-800/90 overflow-hidden shadow-xl">
+              <div class="px-4 py-3 border-b border-zinc-800/80 bg-zinc-900/50 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm">🔍</span>
+                  <div>
+                    <h2 class="text-xs font-bold text-white">카톡으로 받은 구속영장 AI 현미경 검사</h2>
+                    <p class="text-[10.5px] text-zinc-400">서류 이미지에서 법령에 어긋나는 위조 부위 3곳을 찾아냈어요</p>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                  위조 확률 99.7%
+                </span>
+              </div>
+
+              <div class="p-4 space-y-3">
+                <!-- 모의 구속영장 문서 + 빨간 바운딩 박스 마커 -->
+                <div class="relative rounded-xl bg-[#13141a] border border-zinc-700/80 p-4 space-y-2.5 overflow-hidden">
+                  <div class="vision-scan-bar"></div>
+
+                  <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
+                    <span class="text-xs font-extrabold text-zinc-200 tracking-wide">서울중앙지방검찰청 구속영장 청구서</span>
+                    <span class="text-[10px] font-mono text-rose-400">카톡 이미지 수신됨</span>
+                  </div>
+
+                  <!-- 바운딩 박스 1: 사건번호 위조 -->
+                  <div class="p-2.5 rounded-lg border-2 border-dashed border-rose-500/80 bg-rose-500/10 flex items-center justify-between gap-2">
+                    <div>
+                      <div class="text-[10px] font-mono text-zinc-400">기재된 번호: <strong class="text-white">2026형제4821호</strong></div>
+                      <div class="text-[11px] font-bold text-rose-300 mt-0.5">❌ [위조 1] '형제'는 검찰 접수번호예요 (법원 영장번호 아님)</div>
+                    </div>
+                    <span class="px-1.5 py-0.5 rounded bg-rose-500 text-white text-[9.5px] font-bold shrink-0">사건부호 위반</span>
+                  </div>
+
+                  <!-- 바운딩 박스 2: 판사 서명 누락 -->
+                  <div class="p-2.5 rounded-lg border-2 border-dashed border-amber-500/80 bg-amber-500/10 flex items-center justify-between gap-2">
+                    <div>
+                      <div class="text-[10px] font-mono text-zinc-400">발부자 명의: <strong class="text-white">서울중앙지검 김O훈 검사</strong></div>
+                      <div class="text-[11px] font-bold text-amber-300 mt-0.5">❌ [위조 2] 영장은 '법원 판사'만 발부할 수 있어요 (헌법 제12조)</div>
+                    </div>
+                    <span class="px-1.5 py-0.5 rounded bg-amber-500 text-zinc-950 text-[9.5px] font-bold shrink-0">영장주의 위반</span>
+                  </div>
+
+                  <!-- 바운딩 박스 3: 사각 관인 위조 -->
+                  <div class="p-2.5 rounded-lg border-2 border-dashed border-rose-500/80 bg-rose-500/10 flex items-center justify-between gap-2">
+                    <div>
+                      <div class="text-[10px] font-mono text-zinc-400">하단 도장: <strong class="text-white">검찰총장 사각 직인 이미지</strong></div>
+                      <div class="text-[11px] font-bold text-rose-300 mt-0.5">❌ [위조 3] 공식 전서체 규격과 글자 비율이 다른 합성 도장이에요</div>
+                    </div>
+                    <span class="px-1.5 py-0.5 rounded bg-rose-500 text-white text-[9.5px] font-bold shrink-0">관인규정 위반</span>
+                  </div>
+                </div>
+
+                <div class="px-3 py-2 rounded-xl bg-zinc-900/90 border border-zinc-800 text-[11.5px] text-zinc-300 flex items-center justify-between">
+                  <span>💡 <strong>형사소송법 제85조</strong>: 구속영장은 절대 카톡·문자로 보내지 않아요.</span>
+                  <span class="font-mono text-[10.5px] text-emerald-400 shrink-0">6/6 법령 검증됨</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. [시안 C] Linear 스타일 5대 범죄 단서(IOC) 요약 인스펙터 -->
+            <div class="rounded-2xl bg-[#0c0d11] border border-zinc-800/90 overflow-hidden shadow-xl">
+              <div class="px-4 py-3 border-b border-zinc-800/80 bg-zinc-900/50 flex items-center justify-between">
+                <div>
+                  <h2 class="text-xs font-bold text-white">📋 AI가 대화에서 받아적은 사기범 단서 5가지</h2>
+                  <p class="text-[10.5px] text-zinc-400">경찰청(112)과 금감원(1332)에 그대로 전달할 핵심 증거예요</p>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10.5px] font-mono bg-emerald-500/15 text-emerald-400">5 / 5 채증완료</span>
+              </div>
+
+              <div class="divide-y divide-zinc-800/70 text-xs">
+                <div class="px-4 py-2.5 flex items-center justify-between">
+                  <span class="text-zinc-400">1. 사칭한 기관·이름</span>
+                  <span id="ioc-1" class="font-semibold text-white">서울중앙지검 반부패수사1부 김O훈</span>
+                </div>
+                <div class="px-4 py-2.5 flex items-center justify-between">
+                  <span class="text-zinc-400">2. 불러준 가짜 사건번호</span>
+                  <span id="ioc-2" class="font-mono font-semibold text-white">2026형제4821호</span>
+                </div>
+                <div class="px-4 py-2.5 flex items-center justify-between">
+                  <span class="text-zinc-400">3. 유도한 가짜 홈페이지·앱</span>
+                  <span id="ioc-3" class="font-mono font-semibold text-rose-400">http://spo-go-kr.net · TeamViewer</span>
+                </div>
+                <div class="px-4 py-2.5 flex items-center justify-between">
+                  <span class="text-zinc-400">4. 돈 보내라고 한 계좌(대포통장)</span>
+                  <span id="ioc-4" class="font-mono font-semibold text-amber-400">국민은행 482-91-XXXX (안전계좌 사칭)</span>
+                </div>
+                <div class="px-4 py-2.5 flex items-center justify-between">
+                  <span class="text-zinc-400">5. 협박 수법·요구 금액</span>
+                  <span id="ioc-5" class="font-semibold text-zinc-200">12억 자금세탁 연루 협박 · 전액 이체</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. [시안 B/A] 가족 승인 및 112·1332·지급정지 원탭 발송 카드 -->
+            <div id="card-guardian" class="rounded-2xl bg-gradient-to-b from-zinc-900 to-[#0c0d11] border border-zinc-700/90 p-4 space-y-3 shadow-xl">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-base">👨‍👩‍👧</span>
+                  <div>
+                    <h2 class="text-xs font-bold text-white">가족 확인 후 관계기관 한 번에 신고하기</h2>
+                    <p class="text-[10.5px] text-zinc-400">AI가 잘못 신고하지 않도록 가족(보호자) 최종 확인 후 발송해요</p>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 text-emerald-400">오신고 0% 안전잠금</span>
+              </div>
+
+              <button onclick="triggerDemoDispatch()" id="dispatch-main-btn" class="w-full py-3 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2">
+                <span>🚀 가족 승인 완료 · 112 경찰청 · 1332 금감원 · 은행 지급정지 신청하기</span>
+              </button>
+
+              <div id="dispatch-toast-box" class="hidden p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-xs text-emerald-200 space-y-1">
+                <div class="font-bold text-emerald-300">✅ 신고 패킷 발송 완료 (접수번호 #TTC-2026-4821)</div>
+                <div class="text-[11px] text-zinc-300">• 112 경찰청 · 1332 금융감독원: 위조 영장 및 5대 단서 접수 완료</div>
+                <div class="text-[11px] text-zinc-300">• KB국민은행(482-91-XXXX): 대포통장 긴급 지급정지 요청 완료</div>
+                <div class="text-[11px] text-zinc-300">• 등록 가족(자녀 김민지): 안심 리포트 및 통화 녹취 전달 완료</div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- 우측 하단 플로팅 안내 배지 -->
+  <div class="fixed bottom-4 right-5 z-50 flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-zinc-900/95 border border-zinc-700 shadow-2xl text-xs">
+    <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+    <span class="text-zinc-200 font-medium">현재 보시는 화면이 <strong>A(말풍선) + C(2단 레이아웃) + D(영장 비전스캔) + 토스 말투</strong> 통합 시안입니다.</span>
+  </div>
+
+  <script>
+    function setPreviewTab(tab, btnEl) {
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        b.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 text-left transition';
+      });
+      if (btnEl) {
+        btnEl.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-zinc-800/90 text-white border border-zinc-700/80 text-left transition';
+      }
+
+      const paneCall = document.getElementById('pane-call');
+      const paneInspector = document.getElementById('pane-inspector');
+      const grid = document.getElementById('workspace-grid');
+
+      if (tab === 'all') {
+        paneCall.style.display = 'flex';
+        paneInspector.style.display = 'block';
+        paneCall.className = 'lg:col-span-7 rounded-2xl bg-[#0c0d11] border border-zinc-800/90 overflow-hidden flex flex-col shadow-xl';
+        paneInspector.className = 'lg:col-span-5 space-y-4';
+      } else if (tab === 'call') {
+        paneCall.style.display = 'flex';
+        paneInspector.style.display = 'none';
+        paneCall.className = 'lg:col-span-12 rounded-2xl bg-[#0c0d11] border border-zinc-800/90 overflow-hidden flex flex-col shadow-xl';
+      } else if (tab === 'warrant' || tab === 'guardian') {
+        paneCall.style.display = 'flex';
+        paneInspector.style.display = 'block';
+        paneCall.className = 'lg:col-span-6 rounded-2xl bg-[#0c0d11] border border-zinc-800/90 overflow-hidden flex flex-col shadow-xl';
+        paneInspector.className = 'lg:col-span-6 space-y-4';
+      }
+    }
+
+    function setExpatLang(lang) {
+      const el = document.getElementById('sidebar-expat-text');
+      if (lang === 'EN') {
+        el.textContent = '"Korean prosecutors NEVER send warrants via KakaoTalk or ask for Safe Account transfers."';
+      } else if (lang === 'VI') {
+        el.textContent = '"Viện kiểm sát Hàn Quốc KHÔNG BAO GIỜ gửi lệnh bắt qua KakaoTalk hoặc yêu cầu chuyển tiền."';
+      } else {
+        el.textContent = '"한국 검찰은 절대 카톡으로 영장을 보내거나 안전계좌 이체를 요구하지 않아요."';
+      }
+    }
+
+    function triggerDemoDispatch() {
+      const box = document.getElementById('dispatch-toast-box');
+      const btn = document.getElementById('dispatch-main-btn');
+      box.classList.toggle('hidden');
+      if (!box.classList.contains('hidden')) {
+        btn.innerHTML = '<span>✅ 112 · 1332 · 지급정지 신고 접수 완료</span>';
+      } else {
+        btn.innerHTML = '<span>🚀 가족 승인 완료 · 112 경찰청 · 1332 금감원 · 은행 지급정지 신청하기</span>';
+      }
+    }
+
+    function appendTestBubble(msg) {
+      const stream = document.getElementById('chat-stream');
+      const callerDiv = document.createElement('div');
+      callerDiv.className = 'flex items-start gap-3';
+      callerDiv.innerHTML = `
+        <div class="w-9 h-9 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-base shrink-0 mt-0.5">🚨</div>
+        <div class="max-w-[82%]">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-xs font-bold text-rose-300">방금 테스트로 입력한 상대방 멘트</span>
+            <span class="text-[10.5px] font-mono text-zinc-500">방금 전</span>
+          </div>
+          <div class="bubble-in bg-rose-950/25 border border-rose-500/30 p-3.5 text-[13px] leading-relaxed text-zinc-100 shadow-sm">
+            "${msg.replace(/</g, '&lt;')}"
+          </div>
+        </div>
+      `;
+      stream.appendChild(callerDiv);
+
+      const replyDiv = document.createElement('div');
+      replyDiv.className = 'flex items-start gap-3 flex-row-reverse';
+      replyDiv.innerHTML = `
+        <div class="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-base shrink-0 mt-0.5">🧠</div>
+        <div class="max-w-[82%] flex flex-col items-end">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300">Gemini 4 Argon 즉시 판독</span>
+            <span class="text-xs font-bold text-amber-300">AI 안전 방패 응답</span>
+          </div>
+          <div class="bubble-out bg-amber-500/15 border border-amber-500/40 p-3.5 text-[13px] leading-relaxed text-amber-50 shadow-sm">
+            "잠깐만요! 형사소송법 제85조 및 제448조에 따라 카톡 영장이나 안전계좌·원격앱 요구는 100% 보이스피싱이에요. AI가 즉시 통화를 차단하고 증거로 기록했어요."
+          </div>
+        </div>
+      `;
+      stream.appendChild(replyDiv);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function handleCustomInput(e) {
+      e.preventDefault();
+      const input = document.getElementById('custom-chat-input');
+      if (!input.value.trim()) return;
+      appendTestBubble(input.value.trim());
+      input.value = '';
+    }
+
+    function switchDemoScenario(mode) {
+      const heroTitle = document.getElementById('hero-title');
+      const heroDesc = document.getElementById('hero-desc');
+      const heroBadge = document.getElementById('hero-badge');
+      const heroIcon = document.getElementById('hero-icon');
+      const stream = document.getElementById('chat-stream');
+
+      if (mode === 'safe') {
+        heroIcon.textContent = '🟢';
+        heroBadge.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500 text-zinc-950';
+        heroBadge.textContent = '위험도 0.8% · 안심 전화';
+        heroTitle.textContent = '안심하세요, 정상적인 신한은행 만기 안내 전화예요';
+        heroDesc.textContent = '앱 설치나 계좌 이체를 요구하지 않는 안전한 통화예요. AI가 방해하지 않고 조용히 지켜보고 있어요.';
+        stream.innerHTML = `
+          <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-base shrink-0 mt-0.5">🏦</div>
+            <div class="max-w-[82%]">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-bold text-emerald-300">신한은행 고객센터 (정상 안내)</span>
+                <span class="text-[10.5px] font-mono text-zinc-500">00:03</span>
+              </div>
+              <div class="bubble-in bg-emerald-950/25 border border-emerald-500/30 p-3.5 text-[13px] leading-relaxed text-zinc-100">
+                "안녕하세요 김순자 고객님, 다음 주 정기예금 만기일이 도래하여 안내차 연락드렸습니다. 타 계좌 이체나 앱 설치 요구 없이 가까운 영업점이나 공식 앱에서 확인해 주세요."
+              </div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 flex-row-reverse">
+            <div class="w-9 h-9 rounded-full bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-base shrink-0 mt-0.5">👵</div>
+            <div class="max-w-[82%] flex flex-col items-end">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-bold text-sky-300">김순자 고객님 (정상 통화 연결)</span>
+                <span class="text-[10.5px] font-mono text-zinc-500">00:11</span>
+              </div>
+              <div class="bubble-out bg-sky-500/15 border border-sky-500/35 p-3.5 text-[13px] leading-relaxed text-zinc-100">
+                "네 친절하게 알려줘서 고마워요~ 내일 동네 지점으로 직접 가볼게요."
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        window.location.reload();
+      }
+    }
+  </script>
+</body>
+</html>

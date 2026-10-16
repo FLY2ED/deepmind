@@ -72,8 +72,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+ASSETS_DIR = ROOT_DIR / "assets"
+
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+if ASSETS_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
 
 
 @app.get("/", include_in_schema=False)

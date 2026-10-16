@@ -81,15 +81,21 @@ async def synthesize_scammer_or_narration_tts(
     )
 
     # Strictly formatted 2026 Interactions API TTS payload with speech_metadata annotations
+    annotation_obj: dict[str, Any] = {
+        "type": "speech_metadata",
+        "style": style,
+    }
+    if request.speaker:
+        annotation_obj["speaker"] = request.speaker
+
     input_payload = [
         {
-            "type": "text",
-            "text": script_text,
-            "annotations": [
+            "type": "user_input",
+            "content": [
                 {
-                    "type": "speech_metadata",
-                    "speaker": request.speaker,
-                    "style": style,
+                    "type": "text",
+                    "text": script_text,
+                    "annotations": [annotation_obj],
                 }
             ],
         }
@@ -101,29 +107,47 @@ async def synthesize_scammer_or_narration_tts(
             interaction = await client.aio.interactions.create(
                 model="gemini-3.8-flash-tts",
                 input=input_payload,
-                response_modalities=["AUDIO"],
+                response_format={"type": "audio"},
                 generation_config={
-                    "speech_config": {
-                        "voice_config": {
-                            "prebuilt_voice_config": {
-                                "voice_name": request.voice_name
-                            }
-                        }
-                    }
+                    "speech_config": [
+                        {"voice": request.voice_name or request.speaker or "Charon"}
+                    ]
                 },
             )
-            for output in interaction.outputs or []:
-                if getattr(output, "type", None) == "audio" and getattr(output, "data", None):
-                    raw_b64 = output.data if isinstance(output.data, str) else base64.b64encode(output.data).decode("ascii")
-                    return {
-                        "model": "gemini-3.8-flash-tts",
-                        "mode": "live_tts",
-                        "case_id": request.case_id,
-                        "script_text": script_text,
-                        "annotations": input_payload[0]["annotations"],
-                        "mime_type": getattr(output, "mime_type", "audio/wav") or "audio/wav",
-                        "audio_b64": raw_b64,
-                    }
+            output_audio = getattr(interaction, "output_audio", None)
+            if output_audio and getattr(output_audio, "data", None):
+                raw_b64 = (
+                    output_audio.data
+                    if isinstance(output_audio.data, str)
+                    else base64.b64encode(output_audio.data).decode("ascii")
+                )
+                return {
+                    "model": "gemini-3.8-flash-tts",
+                    "mode": "live_tts",
+                    "case_id": request.case_id,
+                    "script_text": script_text,
+                    "annotations": [annotation_obj],
+                    "mime_type": getattr(output_audio, "mime_type", "audio/wav") or "audio/wav",
+                    "audio_b64": raw_b64,
+                }
+            for step in getattr(interaction, "steps", None) or []:
+                if getattr(step, "type", None) == "model_output":
+                    for item in getattr(step, "content", None) or []:
+                        if getattr(item, "type", None) == "audio" and getattr(item, "data", None):
+                            raw_b64 = (
+                                item.data
+                                if isinstance(item.data, str)
+                                else base64.b64encode(item.data).decode("ascii")
+                            )
+                            return {
+                                "model": "gemini-3.8-flash-tts",
+                                "mode": "live_tts",
+                                "case_id": request.case_id,
+                                "script_text": script_text,
+                                "annotations": [annotation_obj],
+                                "mime_type": getattr(item, "mime_type", "audio/wav") or "audio/wav",
+                                "audio_b64": raw_b64,
+                            }
         except Exception:
             pass
 
@@ -133,7 +157,7 @@ async def synthesize_scammer_or_narration_tts(
         "mode": "fallback_synthetic_wav",
         "case_id": request.case_id,
         "script_text": script_text,
-        "annotations": input_payload[0]["annotations"],
+        "annotations": [annotation_obj],
         "mime_type": "audio/wav",
         "audio_b64": base64.b64encode(wav_bytes).decode("ascii"),
     }

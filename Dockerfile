@@ -16,9 +16,13 @@ RUN uv pip install --system --no-cache \
     "pydantic>=2.9.0" \
     "websockets>=13.0" \
     "httpx>=0.27.0" \
-    "python-dotenv>=1.0.1"
+    "python-dotenv>=1.0.1" \
+    "pillow>=12.3.0" \
+    "gtts>=2.5.4" \
+    "edge-tts>=7.3.1"
 
 COPY app ./app
+COPY assets ./assets
 COPY data ./data
 COPY static ./static
 COPY scripts ./scripts

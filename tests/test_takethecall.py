@@ -214,3 +214,17 @@ def test_parallel_scenario_runner_and_client_sdk() -> None:
     assert sdk_resp.status_code == 200
     assert "TakeTheCallAudioRouter" in sdk_resp.text
 
+    index_resp = client.get("/")
+    assert index_resp.status_code == 200
+    assert "/static/dashboard.css" in index_resp.text
+    assert "/static/dashboard-app.js" in index_resp.text
+
+    css_resp = client.get("/static/dashboard.css")
+    assert css_resp.status_code == 200
+    assert "ttc-sidebar" in css_resp.text
+
+    app_js_resp = client.get("/static/dashboard-app.js")
+    assert app_js_resp.status_code == 200
+    assert "TOSS_COPIES" in app_js_resp.text
+
+

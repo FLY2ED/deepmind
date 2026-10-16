@@ -171,6 +171,10 @@ class ForgedWarrantAuditResult(BaseModel):
     rule_checks: list[StatutoryRuleCheck]
     summary_ko: str
     summary_en: str
+    risk_level: Optional[RiskLevel] = "CRITICAL"
+    extracted_iocs: IOCSlots = Field(default_factory=IOCSlots)
+    counter_question_ko: Optional[str] = None
+    counter_question_en: Optional[str] = None
     interaction_id: Optional[str] = None
     cached_tokens: int = 0
     latency_ms: float = 0.0

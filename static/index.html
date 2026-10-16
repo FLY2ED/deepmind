@@ -6,6 +6,7 @@
   <title>대신받아 TakeTheCall — Enterprise Voice Phishing SOC</title>
   <!-- Pretendard Variable CDN -->
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <link rel="stylesheet" href="/static/dashboard.css?v=20261016-v7" />
   <style>
     /* Gmarket Sans Webfonts for Brand Logo & KPI Display Numerals */
     @font-face {
@@ -1088,6 +1089,46 @@
       }
     }
   </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: ["class"],
+      corePlugins: { preflight: false },
+      theme: {
+        extend: {
+          colors: {
+            border: "hsl(var(--border))",
+            input: "hsl(var(--input))",
+            ring: "hsl(var(--ring))",
+            background: "hsl(var(--background))",
+            foreground: "hsl(var(--foreground))",
+            primary: { DEFAULT: "hsl(var(--primary))", foreground: "hsl(var(--primary-foreground))" },
+            secondary: { DEFAULT: "hsl(var(--secondary))", foreground: "hsl(var(--secondary-foreground))" },
+            destructive: { DEFAULT: "hsl(var(--destructive))", foreground: "hsl(var(--destructive-foreground))" },
+            muted: { DEFAULT: "hsl(var(--muted))", foreground: "hsl(var(--muted-foreground))" },
+            accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--accent-foreground))" },
+            card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
+            sidebar: {
+              DEFAULT: "hsl(var(--sidebar-background))",
+              foreground: "hsl(var(--sidebar-foreground))",
+              primary: "hsl(var(--sidebar-primary))",
+              "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+              accent: "hsl(var(--sidebar-accent))",
+              "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+              border: "hsl(var(--sidebar-border))",
+              ring: "hsl(var(--sidebar-ring))",
+            }
+          },
+          borderRadius: {
+            lg: "var(--radius)",
+            md: "calc(var(--radius) - 2px)",
+            sm: "calc(var(--radius) - 4px)",
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="/static/dashboard.css?v=20261016" />
 </head>
 <body>
 
@@ -1923,5 +1964,7 @@
 
     renderWaveform('critical');
   </script>
+  <script src="/static/takethecall-client.js?v=20261016-v7"></script>
+  <script src="/static/dashboard-app.js?v=20261016-v7"></script>
 </body>
 </html>
