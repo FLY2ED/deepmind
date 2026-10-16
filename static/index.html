@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>대신받아 TakeTheCall — Enterprise Voice Phishing SOC</title>
+  <!-- Pretendard Variable CDN -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <style>
+    /* Gmarket Sans Webfonts for Brand Logo & KPI Display Numerals */
+    @font-face {
+      font-family: 'GmarketSansMedium';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'GmarketSansBold';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      /* shadcn/ui Zinc Dark Mode Tokens (Anti-AI Slop / Linear & Vercel SaaS) */
+      --bg-canvas: #09090b;       /* zinc-950 */
+      --bg-card: #0c0c0f;         /* elevated zinc surface */
+      --bg-muted: #18181b;        /* zinc-900 */
+      --bg-subtle: #121215;       /* subtle row surface */
+      --bg-accent: #27272a;       /* zinc-800 */
+
+      --border: #27272a;          /* 1px hairline border */
+      --border-subtle: #1c1c20;   /* table divider */
+      --border-hover: #3f3f46;    /* zinc-700 */
+
+      --fg-primary: #fafafa;      /* zinc-50 */
+      --fg-secondary: #d4d4d8;    /* zinc-300 */
+      --fg-muted: #a1a1aa;        /* zinc-400 */
+      --fg-subtle: #71717a;       /* zinc-500 */
+
+      /* Restrained Enterprise Semantic Accents */
+      --crit-fg: #f87171;         /* rose-400 */
+      --crit-bg: rgba(244, 63, 94, 0.08);
+      --crit-border: rgba(244, 63, 94, 0.28);
+
+      --safe-fg: #34d399;         /* emerald-400 */
+      --safe-bg: rgba(16, 185, 129, 0.08);
+      --safe-border: rgba(16, 185, 129, 0.28);
+
+      --warn-fg: #fbbf24;         /* amber-400 */
+      --warn-bg: rgba(245, 158, 11, 0.08);
+      --warn-border: rgba(245, 158, 11, 0.28);
+
+      --info-fg: #60a5fa;         /* blue-400 */
+      --info-bg: rgba(59, 130, 246, 0.08);
+      --info-border: rgba(59, 130, 246, 0.28);
+
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 10px;
+
+      --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Noto Sans KR", sans-serif;
+      --font-brand: 'GmarketSansBold', "Pretendard Variable", sans-serif;
+      --font-brand-med: 'GmarketSansMedium', "Pretendard Variable", sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      background-color: var(--bg-canvas);
+      color: var(--fg-primary);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.45;
+      letter-spacing: -0.015em;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      font-variant-numeric: tabular-nums;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 9999px;
+    }
+
+    /* TOP NAVIGATION BAR (shadcn/ui App Header) */
+    .topbar {
+      height: 52px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(9, 9, 11, 0.92);
+      backdrop-filter: blur(8px);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .brand-cluster {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .brand-logo-mark {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: var(--fg-primary);
+      color: var(--bg-canvas);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-title-group {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+    }
+
+    .brand-kr {
+      font-family: var(--font-brand);
+      font-size: 16px;
+      letter-spacing: -0.03em;
+      color: var(--fg-primary);
+      line-height: 1;
+    }
+
+    .brand-en {
+      font-family: var(--font-brand-med);
+      font-size: 12px;
+      color: var(--fg-muted);
+      letter-spacing: -0.01em;
+    }
+
+    .slash-divider {
+      color: #3f3f46;
+      font-size: 14px;
+      user-select: none;
+    }
+
+    .workspace-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-muted);
+      border: 1px solid var(--border);
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--fg-secondary);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .dot-emerald { background: #10b981; }
+    .dot-rose { background: #f43f5e; }
+    .dot-amber { background: #f59e0b; }
+    .dot-zinc { background: #71717a; }
+
+    /* SHADCN TABS LIST (Scenario Switcher) */
+    .shadcn-tabs-list {
+      display: inline-flex;
+      align-items: center;
+      background: var(--bg-muted);
+      padding: 3px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      gap: 2px;
+    }
+
+    .mode-tab {
+      appearance: none;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--fg-muted);
+      font-family: var(--font-sans);
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+      white-space: nowrap;
+    }
+
+    .mode-tab:hover {
+      color: var(--fg-primary);
+    }
+
+    .mode-tab.active-safe,
+    .mode-tab.active-critical,
+    .mode-tab.active-guardian {
+      background: var(--bg-canvas);
+      color: var(--fg-primary);
+      border-color: var(--border);
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .telemetry-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--fg-muted);
+    }
+
+    /* MODEL TELEMETRY STRIP */
+    .model-strip {
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .model-stack-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .strip-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--fg-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-right: 4px;
+    }
+
+    .model-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--bg-muted);
+      border: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--fg-secondary);
+    }
+
+    .model-pill .role-tag {
+      color: var(--fg-subtle);
+      font-family: var(--font-sans);
+      font-size: 10.5px;
+    }
+
+    /* MAIN CONTAINER */
+    .dashboard-shell {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 12px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* 4-CARD KPI ROW (shadcn Metric Cards) */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .kpi-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .kpi-label {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--fg-muted);
+    }
+
+    .kpi-value-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .kpi-hero {
+      font-family: var(--font-brand);
+      font-size: 20px;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      color: var(--fg-primary);
+    }
+
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--fg-subtle);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* SHADCN BADGES */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      border: 1px solid var(--border);
+      background: var(--bg-muted);
+      color: var(--fg-secondary);
+      white-space: nowrap;
+    }
+    .badge-crit {
+      background: var(--crit-bg);
+      color: var(--crit-fg);
+      border-color: var(--crit-border);
+    }
+    .badge-safe {
+      background: var(--safe-bg);
+      color: var(--safe-fg);
+      border-color: var(--safe-border);
+    }
+    .badge-warn {
+      background: var(--warn-bg);
+      color: var(--warn-fg);
+      border-color: var(--warn-border);
+    }
+    .badge-info {
+      background: var(--info-bg);
+      color: var(--info-fg);
+      border-color: var(--info-border);
+    }
+
+    /* 3-PANE ENTERPRISE WORKSPACE GRID */
+    .command-grid {
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr) 370px;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .pane-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    /* SHADCN CARD PRIMITIVE */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: rgba(24, 24, 27, 0.35);
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--fg-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .card-title svg {
+      color: var(--fg-muted);
+      flex-shrink: 0;
+    }
+
+    .card-body {
+      padding: 10px 12px;
+    }
+
+    /* 1. LEFT PANE: SCENARIO INJECTOR LIST */
+    .injector-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .scenario-btn {
+      width: 100%;
+      text-align: left;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 7px 9px;
+      cursor: pointer;
+      transition: border-color 0.12s, background 0.12s;
+      color: var(--fg-primary);
+      font-family: var(--font-sans);
+    }
+
+    .scenario-btn:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-muted);
+    }
+
+    .scenario-btn.selected-critical {
+      background: rgba(244, 63, 94, 0.06);
+      border-color: rgba(244, 63, 94, 0.45);
+    }
+
+    .scenario-btn.selected-safe {
+      background: rgba(16, 185, 129, 0.06);
+      border-color: rgba(16, 185, 129, 0.45);
+    }
+
+    .scenario-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 3px;
+    }
+
+    .scenario-dur {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--fg-subtle);
+    }
+
+    .scenario-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--fg-primary);
+      line-height: 1.3;
+    }
+
+    .scenario-desc {
+      font-size: 11px;
+      color: var(--fg-muted);
+      margin-top: 2px;
+      line-height: 1.35;
+    }
+
+    .mic-btn {
+      margin-top: 8px;
+      width: 100%;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-muted);
+      color: var(--fg-secondary);
+      font-family: var(--font-sans);
+      font-size: 11.5px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .mic-btn:hover {
+      background: var(--bg-accent);
+      border-color: var(--border-hover);
+    }
+
+    /* 2. LEFT PANE: PERSONA & EXPAT CONTROLLER */
+    .persona-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .persona-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px 9px;
+      cursor: pointer;
+      transition: border-color 0.12s;
+    }
+
+    .persona-card.active-persona {
+      border-color: #52525b;
+      background: var(--bg-muted);
+    }
+
+    .persona-card.active-guardian-persona {
+      border-color: rgba(244, 63, 94, 0.45);
+      background: rgba(244, 63, 94, 0.05);
+    }
+
+    .persona-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 3px;
+    }
+
+    .persona-name {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--fg-primary);
+    }
+
+    .persona-quote {
+      margin-top: 5px;
+      padding: 5px 7px;
+      background: var(--bg-canvas);
+      border-left: 2px solid #52525b;
+      border-radius: 0 4px 4px 0;
+      font-size: 11px;
+      color: var(--fg-secondary);
+      line-height: 1.38;
+    }
+
+    .lang-pill-group {
+      display: inline-flex;
+      background: var(--bg-canvas);
+      padding: 2px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      gap: 2px;
+      margin-top: 5px;
+    }
+
+    .lang-pill {
+      border: none;
+      background: transparent;
+      color: var(--fg-muted);
+      font-family: var(--font-sans);
+      font-size: 10.5px;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .lang-pill.active {
+      background: var(--bg-accent);
+      color: var(--fg-primary);
+      font-weight: 600;
+    }
+
+    /* 3. LEFT PANE: WARRANT MULTIMODAL AUDIT */
+    .warrant-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 9px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      margin-bottom: 7px;
+    }
+
+    .warrant-doc-title {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--fg-primary);
+    }
+
+    .warrant-doc-sub {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--fg-muted);
+      margin-top: 1px;
+    }
+
+    .forgery-table {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .forgery-row {
+      display: grid;
+      grid-template-columns: 68px 1fr;
+      gap: 8px;
+      padding: 5px 8px;
+      font-size: 11px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-canvas);
+      align-items: baseline;
+    }
+    .forgery-row:last-child {
+      border-bottom: none;
+    }
+
+    .forgery-code {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--crit-fg);
+    }
+
+    .forgery-desc {
+      color: var(--fg-secondary);
+      line-height: 1.35;
+    }
+
+    .forgery-desc code {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--fg-primary);
+      background: var(--bg-muted);
+      padding: 0 4px;
+      border-radius: 3px;
+    }
+
+    /* CENTER PANE: WAVEFORM & DIARIZED LOG */
+    .waveform-panel {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      margin-bottom: 10px;
+    }
+
+    .waveform-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--fg-muted);
+      margin-bottom: 7px;
+      flex-wrap: wrap;
+    }
+
+    .channel-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .channel-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--fg-secondary);
+    }
+
+    .waveform-bars {
+      height: 44px;
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      padding: 4px 2px;
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .wave-bar {
+      flex: 1;
+      border-radius: 1px;
+      min-height: 4px;
+      transition: height 0.2s ease;
+    }
+    .wave-caller { background: #f43f5e; opacity: 0.85; }
+    .wave-caller.safe-wave { background: #10b981; opacity: 0.85; }
+    .wave-shield { background: #e4e4e7; opacity: 0.75; }
+
+    .nonblocking-bar {
+      margin-top: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--fg-muted);
+      flex-wrap: wrap;
+    }
+
+    .nonblocking-bar code {
+      color: var(--fg-primary);
+      background: var(--bg-muted);
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+
+    /* DIARIZED BILINGUAL TRANSCRIPT STREAM */
+    .transcript-stream {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .turn-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+    }
+
+    .turn-card.turn-scammer {
+      border-left: 2px solid #f43f5e;
+    }
+    .turn-card.turn-decoy {
+      border-left: 2px solid #a1a1aa;
+    }
+    .turn-card.turn-coaching {
+      border-left: 2px solid #f59e0b;
+      background: rgba(245, 158, 11, 0.03);
+    }
+    .turn-card.turn-interrupt {
+      border-left: 2px solid #f43f5e;
+      background: rgba(244, 63, 94, 0.05);
+      border-color: rgba(244, 63, 94, 0.25);
+    }
+    .turn-card.turn-safe-caller {
+      border-left: 2px solid #10b981;
+    }
+
+    .turn-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .speaker-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--fg-primary);
+    }
+
+    .ts-mono {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--fg-subtle);
+    }
+
+    .kr-utterance {
+      font-size: 12px;
+      color: var(--fg-primary);
+      line-height: 1.45;
+      margin-bottom: 4px;
+    }
+
+    .en-telemetry {
+      font-size: 11px;
+      color: var(--fg-muted);
+      line-height: 1.4;
+      padding-top: 4px;
+      border-top: 1px dashed var(--border-subtle);
+    }
+
+    .mark-crit {
+      background: rgba(244, 63, 94, 0.14);
+      color: #fda4af;
+      padding: 0 4px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+
+    .mark-warn {
+      background: rgba(245, 158, 11, 0.14);
+      color: #fde68a;
+      padding: 0 4px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+
+    /* RIGHT PANE: VERDICT, KILL-CHAIN, IOC TABLE, GUARDIAN DISPATCH */
+    .verdict-box {
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .verdict-box.verdict-critical {
+      background: rgba(244, 63, 94, 0.06);
+      border-color: rgba(244, 63, 94, 0.35);
+    }
+    .verdict-box.verdict-safe {
+      background: rgba(16, 185, 129, 0.06);
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .verdict-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .verdict-sub {
+      font-size: 11px;
+      color: var(--fg-muted);
+      margin-top: 2px;
+    }
+    .verdict-score {
+      font-family: var(--font-brand);
+      font-size: 20px;
+      letter-spacing: -0.03em;
+      flex-shrink: 0;
+    }
+
+    .killchain-stepper {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin-bottom: 9px;
+    }
+
+    .kc-step {
+      padding: 5px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-subtle);
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--fg-muted);
+      text-align: center;
+      line-height: 1.25;
+    }
+
+    .kc-step.kc-active {
+      background: rgba(244, 63, 94, 0.08);
+      border-color: rgba(244, 63, 94, 0.35);
+      color: #fda4af;
+      font-weight: 600;
+    }
+
+    .kc-step.kc-cleared {
+      background: rgba(16, 185, 129, 0.07);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+    }
+
+    .cache-box {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 7px 9px;
+    }
+
+    .cache-bar-track {
+      height: 5px;
+      background: var(--bg-accent);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 5px 0;
+    }
+
+    .cache-bar-fill {
+      width: 96.4%;
+      height: 100%;
+      background: var(--fg-primary);
+      border-radius: 999px;
+    }
+
+    .cache-meta {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--fg-subtle);
+    }
+
+    /* IOC DATA TABLE */
+    .ioc-table {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .ioc-row {
+      display: grid;
+      grid-template-columns: 102px 1fr;
+      gap: 8px;
+      padding: 6px 9px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-canvas);
+      font-size: 11px;
+      align-items: center;
+    }
+    .ioc-row:last-child {
+      border-bottom: none;
+    }
+
+    .ioc-key {
+      color: var(--fg-muted);
+      font-weight: 500;
+    }
+
+    .ioc-val {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--fg-primary);
+      text-align: right;
+      word-break: break-all;
+    }
+
+    /* GUARDIAN APPROVAL CARD */
+    .verified-stamps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin: 7px 0 9px;
+    }
+
+    .v-stamp {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      color: var(--fg-secondary);
+    }
+
+    /* SHADCN PRIMARY BUTTON (High-contrast Zinc-50 on Zinc-950) */
+    .dispatch-btn {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid #e4e4e7;
+      background: #fafafa;
+      color: #09090b;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      cursor: pointer;
+      transition: background 0.12s, transform 0.08s;
+    }
+    .dispatch-btn:hover {
+      background: #e4e4e7;
+    }
+    .dispatch-btn:active {
+      transform: scale(0.995);
+    }
+
+    .dispatch-toast {
+      display: none;
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-subtle);
+      border: 1px solid var(--safe-border);
+      font-size: 11px;
+      color: var(--fg-secondary);
+      line-height: 1.45;
+    }
+    .dispatch-toast.visible {
+      display: block;
+    }
+
+    /* RESPONSIVE MOBILE LAYOUT (<960px) */
+    @media (max-width: 960px) {
+      .topbar {
+        height: auto;
+        padding: 10px 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .slash-divider,
+      .workspace-pill,
+      .topbar-right {
+        display: none;
+      }
+      .shadcn-tabs-list {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        order: 3;
+      }
+      .mode-tab {
+        width: 100%;
+        justify-content: flex-start;
+        font-size: 11.5px;
+        padding: 6px 10px;
+      }
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .kpi-card {
+        padding: 9px 10px;
+      }
+      .kpi-hero {
+        font-size: 17px;
+      }
+      .command-grid {
+        grid-template-columns: 1fr;
+      }
+      .pane-col:nth-child(3) {
+        order: 1;
+      }
+      .pane-col:nth-child(2) {
+        order: 2;
+      }
+      .pane-col:nth-child(1) {
+        order: 3;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAVIGATION BAR (shadcn/ui Enterprise SaaS Header) -->
+  <header class="topbar">
+    <div class="brand-cluster">
+      <div class="brand-logo-mark" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="brand-title-group">
+        <span class="brand-kr">대신받아</span>
+        <span class="brand-en">TakeTheCall</span>
+      </div>
+      <span class="slash-divider">/</span>
+      <div class="workspace-pill">
+        <span class="status-dot dot-emerald"></span>
+        <span>Voice Phishing Defense SOC</span>
+        <span style="color:var(--fg-subtle);font-family:var(--font-mono);font-size:10.5px;">v2.4</span>
+      </div>
+    </div>
+
+    <!-- SHADCN SEGMENTED TABS -->
+    <div class="shadcn-tabs-list" role="tablist" aria-label="Scenario Mode Switcher">
+      <button id="mode-safe" class="mode-tab" onclick="switchScenarioMode('safe')" type="button">
+        <span class="status-dot dot-emerald"></span>
+        정상 통화 대조 (SAFE 15s)
+      </button>
+      <button id="mode-critical" class="mode-tab active-critical" onclick="switchScenarioMode('critical')" type="button">
+        <span class="status-dot dot-rose"></span>
+        검찰사칭·영장감식 (CRITICAL)
+      </button>
+      <button id="mode-guardian" class="mode-tab" onclick="switchScenarioMode('guardian')" type="button">
+        <span class="status-dot dot-amber"></span>
+        Stage 4 차단·가족승인 (INTERRUPT)
+      </button>
+    </div>
+
+    <div class="topbar-right">
+      <div class="telemetry-pill">
+        <span class="status-dot dot-emerald"></span>
+        <span>Cloud Run WSS · Ephemeral Token</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- SUB-HEADER: GEMINI 2026 MODEL TELEMETRY STRIP -->
+  <div class="model-strip">
+    <div class="model-stack-bar">
+      <span class="strip-label">Active Models</span>
+      <span class="model-pill">gemini-3.8-live-extended-thinking <span class="role-tag">Decoy Audio</span></span>
+      <span class="model-pill">gemini-4-argon <span class="role-tag">1M Cache · 96.4% Hit</span></span>
+      <span class="model-pill">gemini-3.5-transcribe-live <span class="role-tag">Diarized STT</span></span>
+      <span class="model-pill">gemini-3.5-live-translate-preview <span class="role-tag">Expat Alert</span></span>
+      <span class="model-pill">gemini-nano-banana-2.1 <span class="role-tag">Warrant Synthesis</span></span>
+    </div>
+    <span style="font-family:var(--font-mono);font-size:11px;color:var(--fg-subtle);">Zero-Howling WebAudio Split · 16kHz In / 24kHz Out</span>
+  </div>
+
+  <!-- MAIN ENTERPRISE DASHBOARD SHELL -->
+  <div class="dashboard-shell">
+
+    <!-- 4-CARD KPI SUMMARY STRIP -->
+    <section class="kpi-grid" aria-label="Key Performance Telemetry">
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span class="kpi-label" style="white-space:nowrap;">실시간 위협 판정</span>
+          <span class="badge badge-crit" id="kpi-verdict-badge">CRITICAL · S4</span>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-hero" id="kpi-verdict-hero" style="color:var(--crit-fg);white-space:nowrap;">99.4%</span>
+          <span class="kpi-sub" id="kpi-verdict-sub">CASE-01 검찰사칭 + 위조구속영장</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span class="kpi-label" style="white-space:nowrap;">양방향 통화 지연</span>
+          <span class="badge" id="kpi-latency-badge">NON_BLOCKING</span>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-hero" style="white-space:nowrap;">0.00s</span>
+          <span class="kpi-sub" id="kpi-latency-sub">Argon 백그라운드 추론 1.58s (끊김 0ms)</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span class="kpi-label" style="white-space:nowrap;">1M 암시적 캐시</span>
+          <span class="badge badge-safe">95% SAVED</span>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-hero" style="white-space:nowrap;">96.4%</span>
+          <span class="kpi-sub">18,420 / 19,100 tok (Byte-0 정적 프리픽스)</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span class="kpi-label" style="white-space:nowrap;">적발 법령·단서</span>
+          <span class="badge badge-warn" id="kpi-ioc-badge">형소법 85·118조</span>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-hero" id="kpi-ioc-hero" style="white-space:nowrap;">11건 적발</span>
+          <span class="kpi-sub" id="kpi-ioc-sub">공문 위조 6건 · 대포통장/URL 5건 채증</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3-PANE SOC WORKSPACE -->
+    <main class="command-grid">
+
+      <!-- LEFT PANE: SCENARIO INJECTOR, WARRANT MULTIMODAL AUDIT & PERSONA -->
+      <section class="pane-col" aria-label="Call Injector and Multimodal Warrant Audit">
+
+        <!-- 1. CALL STREAM INJECTOR -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              통화 스트림 인젝터 (Call Injector)
+            </div>
+            <span class="badge">gemini-3.8-flash-tts</span>
+          </div>
+          <div class="card-body">
+            <div class="injector-list">
+              <button id="inj-safe" class="scenario-btn" onclick="switchScenarioMode('safe')" type="button">
+                <div class="scenario-top">
+                  <span class="badge badge-safe">SAFE CONTROL · 정상 대조군</span>
+                  <span class="scenario-dur">00:15 · 오탐 0%</span>
+                </div>
+                <div class="scenario-name">신한은행 정기예금 만기 및 우체국 등기 안내</div>
+                <div class="scenario-desc">앱 설치·안전계좌 요구 없음 · 공식 영업점 방문 안내</div>
+              </button>
+
+              <button id="inj-case01" class="scenario-btn selected-critical" onclick="switchScenarioMode('critical')" type="button">
+                <div class="scenario-top">
+                  <span class="badge badge-crit">CASE-01 · CRITICAL (STAGE 4)</span>
+                  <span class="scenario-dur">00:52 · 검찰+위조영장</span>
+                </div>
+                <div class="scenario-name">서울중앙지검 반부패수사1부 사칭 + 카톡 구속영장</div>
+                <div class="scenario-desc">12억 대포통장 연루 협박 · TeamViewer 원격제어 및 안전계좌 요구</div>
+              </button>
+
+              <button id="inj-case04" class="scenario-btn" onclick="switchScenarioMode('guardian')" type="button">
+                <div class="scenario-top">
+                  <span class="badge badge-warn">CASE-04 · HIGH (STAGE 3)</span>
+                  <span class="scenario-dur">00:41 · 악성 APK</span>
+                </div>
+                <div class="scenario-name">금융감독원 저금리 대환대출 사칭 + 원격제어 .apk</div>
+                <div class="scenario-desc">중복대출 약정 위반 협박 · 출처 불명 압축앱 설치 유도</div>
+              </button>
+
+              <button id="inj-case08" class="scenario-btn" onclick="switchScenarioMode('guardian')" type="button">
+                <div class="scenario-top">
+                  <span class="badge badge-crit">CASE-08 · CRITICAL (DEEPFAKE)</span>
+                  <span class="scenario-dur">00:36 · 납치·응급실</span>
+                </div>
+                <div class="scenario-name">자녀 음성 딥페이크 납치·응급실 긴급 합의금 갈취</div>
+                <div class="scenario-desc">음성 복제 울음소리 + 발설 금지 강요 및 즉각 현금 송금 요구</div>
+              </button>
+            </div>
+
+            <button class="mic-btn" onclick="toggleLiveMic(this)" type="button">
+              <span class="status-dot dot-emerald"></span>
+              <span id="mic-btn-label">실시간 WebAudio 마이크 스트림 연결 (16kHz PCM Ready)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. FORGED WARRANT MULTIMODAL AUDIT -->
+        <div class="card" id="warrant-audit-card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              위조 공문서 멀티모달 포렌식
+            </div>
+            <span class="badge">nano-banana-2.1 · argon Vision</span>
+          </div>
+          <div class="card-body">
+            <div class="warrant-header-bar">
+              <div>
+                <div class="warrant-doc-title">서울중앙지방검찰청 구속영장 청구서</div>
+                <div class="warrant-doc-sub">사건번호 2026형제4821호 · http://spo-go-kr.net</div>
+              </div>
+              <span class="badge badge-crit">관인 불일치 99.7%</span>
+            </div>
+
+            <div class="forgery-table" id="forgery-flags-list">
+              <div class="forgery-row">
+                <span class="forgery-code">ART.85</span>
+                <span class="forgery-desc">카톡·SNS 메신저 영장 송달 (형사소송법 제85조 원본 제시 위반)</span>
+              </div>
+              <div class="forgery-row">
+                <span class="forgery-code">DOMAIN</span>
+                <span class="forgery-desc">사설 위장 도메인 <code>http://spo-go-kr.net</code> (공식: <code>spo.go.kr</code>)</span>
+              </div>
+              <div class="forgery-row">
+                <span class="forgery-code">RAT/APK</span>
+                <span class="forgery-desc">원격제어 <code>TeamViewer / 안전점검.apk</code> 비공식 설치 강요</span>
+              </div>
+              <div class="forgery-row">
+                <span class="forgery-code">SEAL</span>
+                <span class="forgery-desc">검찰총장 사각 관인 서체·비율 합성 위조 적발</span>
+              </div>
+              <div class="forgery-row">
+                <span class="forgery-code">ACCOUNT</span>
+                <span class="forgery-desc">법적 존재하지 않는 '국가안전계좌' 자금 이체 요구</span>
+              </div>
+              <div class="forgery-row">
+                <span class="forgery-code">ISOLATE</span>
+                <span class="forgery-desc">가족·은행원 발설 시 즉시 구속 협박 (강압적 고립 유도)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. DUAL PERSONA & EXPAT MULTILINGUAL SHIELD -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              응대 페르소나 &amp; 다국어 가드레일
+            </div>
+            <span class="badge" id="persona-mode-badge">Auto-Switch</span>
+          </div>
+          <div class="card-body">
+            <div class="persona-stack">
+              <div id="persona-soonja" class="persona-card active-persona" onclick="switchScenarioMode('critical')">
+                <div class="persona-top">
+                  <span class="persona-name">김순자 (68세, 은퇴 교사 · 지연 미끼)</span>
+                  <span class="badge" id="soonja-status-pill">IN_PROGRESS</span>
+                </div>
+                <div class="persona-quote" id="soonja-quote">
+                  "아이고 수사관님 잠시만요, 돋보기가 어디 갔나… 사건번호랑 부서 번호를 천천히 다시 불러주셔요."
+                </div>
+              </div>
+
+              <div id="persona-guardian" class="persona-card" onclick="switchScenarioMode('guardian')">
+                <div class="persona-top">
+                  <span class="persona-name">법무 보호자 방패 (Stage 4 INTERRUPT)</span>
+                  <span class="badge badge-crit">형소법 85·118조</span>
+                </div>
+                <div class="persona-quote" style="border-left-color:var(--crit-fg);">
+                  "경고합니다. 형사소송법 제85조 영장 송달 위반 및 제118조 사칭 정황이 채증되었습니다."
+                </div>
+              </div>
+
+              <div id="persona-foreign" class="persona-card">
+                <div class="persona-top">
+                  <span class="persona-name">체류 외국인 보호 모드 (Minh Nguyen, 24)</span>
+                  <span class="badge badge-info">Live Translate</span>
+                </div>
+                <div class="lang-pill-group">
+                  <button class="lang-pill active" onclick="setAlertLang('EN', this)" type="button">EN English</button>
+                  <button class="lang-pill" onclick="setAlertLang('VI', this)" type="button">VI Tiếng Việt</button>
+                  <button class="lang-pill" onclick="setAlertLang('KO', this)" type="button">KO 한국어</button>
+                </div>
+                <div class="persona-quote" id="foreign-quote-box">
+                  [EN Live Alert] Korean prosecutors NEVER send arrest warrants via SNS or demand "Safe Account" cash transfers.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- CENTER PANE: LIVE AUDIO SPECTRUM & BILINGUAL DIARIZED TRANSCRIPT -->
+      <section class="pane-col" aria-label="Bidirectional Audio Stream and Bilingual Diarized Transcript">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 12h4l3-9 4 18 3-9h6"/></svg>
+              실시간 양방향 오디오 스펙트럼 &amp; 한·영 병기 화자분리 로그
+            </div>
+            <span class="badge" id="center-stream-badge">input_audio_transcription: "smart"</span>
+          </div>
+
+          <div class="card-body">
+            <!-- DUAL-CHANNEL OSCILLOSCOPE -->
+            <div class="waveform-panel">
+              <div class="waveform-meta">
+                <div class="channel-group">
+                  <span class="channel-item">
+                    <span class="status-dot dot-rose" id="caller-channel-dot"></span>
+                    <span id="caller-channel-label">Ch1: 수신 오디오 (16kHz PCM · 검찰사칭 용의자)</span>
+                  </span>
+                  <span class="channel-item">
+                    <span class="status-dot" style="background:#e4e4e7;"></span>
+                    <span>Ch2: Gemini 3.8 Live 대역 방패 (24kHz PCM)</span>
+                  </span>
+                </div>
+                <span class="badge" id="live-timer-badge">LIVE · 00:49 / 00:52</span>
+              </div>
+
+              <div class="waveform-bars" id="waveform-bars-container"></div>
+
+              <div class="nonblocking-bar" id="nonblocking-status-bar">
+                <span>NON_BLOCKING Call: <code>consult_argon_guardian(call_stage="S4")</code></span>
+                <span>Argon Latency: <strong>1.58s</strong> · Audio Dropouts: <strong>0ms</strong></span>
+              </div>
+            </div>
+
+            <!-- DIARIZED BILINGUAL TRANSCRIPT LOG -->
+            <div class="transcript-stream" id="transcript-container">
+              <!-- Turn 1 -->
+              <div class="turn-card turn-scammer">
+                <div class="turn-header">
+                  <span class="speaker-meta">
+                    <span class="badge badge-crit">발신자 · Speaker 1</span>
+                    <span>서울중앙지검 반부패수사1부 사칭</span>
+                  </span>
+                  <span class="ts-mono">[00:12]</span>
+                </div>
+                <div class="kr-utterance">
+                  "서울중앙지검 반부패수사1부 김O훈 수사관입니다. 김순자 씨 명의 대포통장이 <span class="mark-crit">12억 원 자금세탁</span>에 연루되어 카톡으로 <span class="mark-crit">사건번호 2026형제4821호</span> 구속영장 공문을 보냈습니다."
+                </div>
+                <div class="en-telemetry">
+                  [EN Telemetry] "This is Investigator Kim, Seoul Central District Prosecutors' Office. A mule account under your name is linked to 1.2B KRW laundering. We sent Arrest Warrant Case #2026-4821 via KakaoTalk."
+                </div>
+              </div>
+
+              <!-- Turn 2 -->
+              <div class="turn-card turn-decoy">
+                <div class="turn-header">
+                  <span class="speaker-meta">
+                    <span class="badge">AI 미끼 · 김순자</span>
+                    <span>gemini-3.8-live Stalling Filler</span>
+                  </span>
+                  <span class="ts-mono">[00:19] · IN_PROGRESS</span>
+                </div>
+                <div class="kr-utterance">
+                  "아이고 세상에, 수사관님 제가 교직에서 은퇴하고 통장 빌려준 적도 없는데… 잠시만요 돋보기를 끼고 볼게요. 부서 전화번호랑 입금 계좌가 어디 적혀 있나요?"
+                </div>
+                <div class="en-telemetry">
+                  [EN Telemetry · Active IOC Probing] "Oh my goodness, Investigator, I'm a retired teacher and never lent my bankbook… Hold on while I find my reading glasses. What is your callback number and verification account?"
+                </div>
+              </div>
+
+              <!-- Turn 3 -->
+              <div class="turn-card turn-coaching">
+                <div class="turn-header">
+                  <span class="speaker-meta">
+                    <span class="badge badge-warn">ARGON 코칭 주입</span>
+                    <span>send_client_content(turn_complete=False)</span>
+                  </span>
+                  <span class="ts-mono">[00:29] · Statutory Probe</span>
+                </div>
+                <div class="kr-utterance">
+                  "수사관님, <span class="mark-warn">형사소송법 제85조</span>상 구속영장은 원본 직접 제시나 등기우편이 원칙인데, <span class="mark-warn">대검찰청 찐센터(02-3480-2000)</span>에 이 사건번호 2026형제4821호를 지금 조회해 봐도 되죠?"
+                </div>
+                <div class="en-telemetry">
+                  [EN Telemetry · Argon Whispered Prompt] "Investigator, under Criminal Procedure Act Art. 85, warrants must be presented in person—may I verify Case #2026-4821 with the Supreme Prosecutors' Office Verification Center right now?"
+                </div>
+              </div>
+
+              <!-- Turn 4 -->
+              <div class="turn-card turn-scammer">
+                <div class="turn-header">
+                  <span class="speaker-meta">
+                    <span class="badge badge-crit">발신자 · Stage 4 고립·갈취</span>
+                    <span>원격제어 앱 및 안전계좌 이체 강요</span>
+                  </span>
+                  <span class="ts-mono">[00:38] · Stage 4 Trigger</span>
+                </div>
+                <div class="kr-utterance">
+                  "지금 기밀 수사 중이라 가족이나 은행원한테 말하면 즉시 구속입니다! 당장 <span class="mark-crit">http://spo-go-kr.net</span>에서 원격점검 앱 깔고 <span class="mark-crit">국민 482-91-XXXX 국가안전계좌</span>로 전액 이체하세요!"
+                </div>
+                <div class="en-telemetry">
+                  [EN Telemetry · Stage 4 Extortion Trigger] "This is classified—if you tell family or bank staff you'll be arrested immediately! Install the remote app from http://spo-go-kr.net and wire all funds to KB 482-91-XXXX Safe Account!"
+                </div>
+              </div>
+
+              <!-- Turn 5 -->
+              <div class="turn-card turn-interrupt" id="interrupt-turn-banner">
+                <div class="turn-header">
+                  <span class="speaker-meta">
+                    <span class="badge badge-crit">법무 보호자 방패 · INTERRUPT</span>
+                    <span>오디오 버퍼 즉시 선점 및 통화 차단</span>
+                  </span>
+                  <span class="ts-mono">[00:47] · behavior="INTERRUPT"</span>
+                </div>
+                <div class="kr-utterance">
+                  "통화 즉시 차단 및 보호 모드 전환. 발신자의 <span class="mark-warn">형사소송법 제85조·제118조 위반</span> 및 악성 원격제어 유도 증거 5건이 채증 완료되어 보호자 및 112·1332 신고 루프로 이관됩니다."
+                </div>
+                <div class="en-telemetry">
+                  [EN Telemetry · Buffer Flushed] "Call intercepted &amp; user audio muted. 5 statutory violations (Art. 85 &amp; 118) and IOCs logged. Escalating verified forensic bundle to Family Guardian &amp; 112/1332."
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT PANE: ARGON TELEMETRY, 5 IOC TABLE & GUARDIAN HITL DISPATCH -->
+      <section class="pane-col" aria-label="Argon Forensic Telemetry and Family Guardian Approval">
+
+        <!-- 1. KILL-CHAIN & CACHE TELEMETRY -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              킬체인 단계 &amp; Argon 2-Tier 추론
+            </div>
+            <span class="badge" id="thinking-level-badge">medium → high</span>
+          </div>
+          <div class="card-body">
+            <div id="verdict-banner-box" class="verdict-box verdict-critical">
+              <div>
+                <div class="verdict-title" id="verdict-title-text" style="color:var(--crit-fg);">
+                  CRITICAL THREAT · 검찰사칭 킬체인
+                </div>
+                <div class="verdict-sub" id="verdict-sub-text">
+                  CASE-01 일치 · 형사소송법 제85·118·215조 위반
+                </div>
+              </div>
+              <div class="verdict-score" id="verdict-score-pill" style="color:var(--crit-fg);">
+                99.4%
+              </div>
+            </div>
+
+            <div class="killchain-stepper" id="killchain-stepper">
+              <div class="kc-step kc-active" id="kc-1">S1 권위사칭<br/>검찰 사칭</div>
+              <div class="kc-step kc-active" id="kc-2">S2 위조영장<br/>카톡 송달</div>
+              <div class="kc-step kc-active" id="kc-3">S3 원격제어<br/>TeamViewer</div>
+              <div class="kc-step kc-active" id="kc-4">S4 고립·이체<br/>INTERRUPT</div>
+            </div>
+
+            <div class="cache-box">
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600;color:var(--fg-secondary);">
+                <span>Byte-0 Static Prefix Cache (1M Context)</span>
+                <span style="font-family:var(--font-mono);color:var(--safe-fg);">96.4% Hit</span>
+              </div>
+              <div class="cache-bar-track">
+                <div class="cache-bar-fill"></div>
+              </div>
+              <div class="cache-meta">
+                <span>공개사례 20건 + 형사소송법 법령</span>
+                <span>18,420 / 19,100 tok</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. EXTRACTED FORENSIC IOC TABLE -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+              실시간 채증 5대 범죄 단서 (IOCs)
+            </div>
+            <span class="badge" id="ioc-count-badge">5 / 5 Verified</span>
+          </div>
+          <div class="card-body">
+            <div class="ioc-table" id="ioc-grid-container">
+              <div class="ioc-row">
+                <span class="ioc-key">1. 위조 사건번호</span>
+                <span class="ioc-val" id="ioc-val-1">2026형제4821호</span>
+              </div>
+              <div class="ioc-row">
+                <span class="ioc-key">2. 사칭 기관·성명</span>
+                <span class="ioc-val" id="ioc-val-2">서울중앙지검 반부패수사1부 김O훈</span>
+              </div>
+              <div class="ioc-row">
+                <span class="ioc-key">3. 피싱 URL·번호</span>
+                <span class="ioc-val" id="ioc-val-3" style="color:var(--crit-fg);">http://spo-go-kr.net · 02-3480-XXXX</span>
+              </div>
+              <div class="ioc-row">
+                <span class="ioc-key">4. 대포통장·원격앱</span>
+                <span class="ioc-val" id="ioc-val-4" style="color:var(--warn-fg);">국민 482-91-XXXX · TeamViewer</span>
+              </div>
+              <div class="ioc-row">
+                <span class="ioc-key">5. 갈취 명목·금액</span>
+                <span class="ioc-val" id="ioc-val-5">12억 자금세탁 무고 입증 전액 이체</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. FAMILY GUARDIAN HITL APPROVAL -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+              보호자 승인 및 기관 긴급 발송 (HITL)
+            </div>
+            <span class="badge badge-safe">thinking_level="high"</span>
+          </div>
+          <div class="card-body">
+            <div style="font-size:11px;color:var(--fg-muted);line-height:1.4;">
+              통화 종료 후 <code>gemini-4-argon (high)</code>가 녹취 타임스탬프와 대조 검증한 무환각(Hallucination-Free) 증거 패키지입니다.
+            </div>
+
+            <div class="verified-stamps" id="guardian-timestamps">
+              <span class="v-stamp">[00:12] 형소법 제118조 사칭</span>
+              <span class="v-stamp">[00:29] 제85조 카톡영장</span>
+              <span class="v-stamp">[00:47] Stage 4 지급정지</span>
+            </div>
+
+            <button id="guardian-approve-btn" class="dispatch-btn" onclick="triggerGuardianDispatch()" type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              <span id="guardian-btn-text">보호자 승인 및 112 · 1332 · 지급정지 발송</span>
+            </button>
+
+            <div id="guardian-dispatch-toast" class="dispatch-toast">
+              <div style="font-weight:600;color:var(--safe-fg);margin-bottom:3px;">증거 패키지 발송 완료 (Packet #TTC-2026-4821)</div>
+              <div>• 112 경찰청 · 1332 금감원: 5대 IOC 및 위조영장 해시 접수</div>
+              <div>• KB국민은행 긴급 지급정지: <code>482-91-XXXX</code> 출금 차단 요청</div>
+              <div>• 등록 보호자(자녀) 알림톡: 한·영 요약 리포트 및 녹취 전달</div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    const waveHeightsCritical = [
+      32, 65, 84, 48, 92, 74, 38, 62, 88, 95, 70, 44,
+      82, 90, 60, 45, 78, 86, 54, 94, 76, 64, 88, 52,
+      70, 96, 84, 62, 48, 80, 92, 68, 55, 86, 74, 42,
+      64, 88, 72, 50, 84, 90, 62, 46
+    ];
+    const waveHeightsSafe = [
+      16, 24, 30, 20, 26, 22, 18, 28, 24, 20, 26, 16,
+      22, 28, 20, 16, 24, 26, 20, 22, 18, 24, 20, 16,
+      20, 26, 22, 18, 16, 22, 24, 20, 16, 22, 18, 14,
+      20, 24, 18, 16, 22, 20, 16, 14
+    ];
+
+    function renderWaveform(mode) {
+      const container = document.getElementById('waveform-bars-container');
+      if (!container) return;
+      const heights = mode === 'safe' ? waveHeightsSafe : waveHeightsCritical;
+      container.innerHTML = heights.map((h, idx) => {
+        const isShield = idx % 2 === 1;
+        const cls = isShield
+          ? 'wave-bar wave-shield'
+          : (mode === 'safe' ? 'wave-bar wave-caller safe-wave' : 'wave-bar wave-caller');
+        return `<div class="${cls}" style="height:${h}%"></div>`;
+      }).join('');
+    }
+
+    function setAlertLang(lang, btnEl) {
+      document.querySelectorAll('.lang-pill').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+      const box = document.getElementById('foreign-quote-box');
+      if (lang === 'EN') {
+        box.textContent = '[EN Live Alert] Korean prosecutors NEVER send arrest warrants via SNS or demand "Safe Account" cash transfers.';
+      } else if (lang === 'VI') {
+        box.textContent = '[VI Cảnh báo khẩn] Viện kiểm sát Hàn Quốc KHÔNG BAO GIỜ gửi lệnh bắt qua KakaoTalk hoặc yêu cầu chuyển tiền vào "Tài khoản an toàn".';
+      } else {
+        box.textContent = '[KO 실시간 경고] 대한민국 검찰·금융감독원은 절대 카톡으로 영장을 보내거나 안전계좌 이체·원격앱 설치를 요구하지 않습니다.';
+      }
+    }
+
+    function toggleLiveMic(btn) {
+      const label = document.getElementById('mic-btn-label');
+      if (label.textContent.includes('Ready')) {
+        label.textContent = '16kHz PCM 스트리밍 활성 (Zero-Howling WebAudio Split)';
+        btn.style.borderColor = 'rgba(16, 185, 129, 0.5)';
+        btn.style.color = '#34d399';
+      } else {
+        label.textContent = '실시간 WebAudio 마이크 스트림 연결 (16kHz PCM Ready)';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }
+    }
+
+    function triggerGuardianDispatch() {
+      const toast = document.getElementById('guardian-dispatch-toast');
+      const btnText = document.getElementById('guardian-btn-text');
+      toast.classList.toggle('visible');
+      if (toast.classList.contains('visible')) {
+        btnText.textContent = '발송 완료 · 112 경찰청 · 1332 금감원 · 지급정지 접수됨';
+      } else {
+        btnText.textContent = '보호자 승인 및 112 · 1332 · 지급정지 발송';
+      }
+    }
+
+    function switchScenarioMode(mode) {
+      const tabSafe = document.getElementById('mode-safe');
+      const tabCrit = document.getElementById('mode-critical');
+      const tabGuard = document.getElementById('mode-guardian');
+      tabSafe.className = 'mode-tab' + (mode === 'safe' ? ' active-safe' : '');
+      tabCrit.className = 'mode-tab' + (mode === 'critical' ? ' active-critical' : '');
+      tabGuard.className = 'mode-tab' + (mode === 'guardian' ? ' active-guardian' : '');
+
+      document.getElementById('inj-safe').className = 'scenario-btn' + (mode === 'safe' ? ' selected-safe' : '');
+      document.getElementById('inj-case01').className = 'scenario-btn' + (mode === 'critical' ? ' selected-critical' : '');
+      document.getElementById('inj-case04').className = 'scenario-btn' + (mode === 'guardian' ? ' selected-critical' : '');
+
+      const pSoonja = document.getElementById('persona-soonja');
+      const pGuardian = document.getElementById('persona-guardian');
+      pSoonja.className = 'persona-card' + (mode !== 'guardian' ? ' active-persona' : '');
+      pGuardian.className = 'persona-card' + (mode === 'guardian' ? ' active-guardian-persona' : '');
+
+      renderWaveform(mode);
+
+      const verdictBox = document.getElementById('verdict-banner-box');
+      const verdictTitle = document.getElementById('verdict-title-text');
+      const verdictSub = document.getElementById('verdict-sub-text');
+      const verdictScore = document.getElementById('verdict-score-pill');
+      const kpiVerdictBadge = document.getElementById('kpi-verdict-badge');
+      const kpiVerdictHero = document.getElementById('kpi-verdict-hero');
+      const kpiVerdictSub = document.getElementById('kpi-verdict-sub');
+      const kpiIocBadge = document.getElementById('kpi-ioc-badge');
+      const kpiIocHero = document.getElementById('kpi-ioc-hero');
+      const kpiIocSub = document.getElementById('kpi-ioc-sub');
+
+      const kcSteps = [
+        document.getElementById('kc-1'),
+        document.getElementById('kc-2'),
+        document.getElementById('kc-3'),
+        document.getElementById('kc-4')
+      ];
+      const toast = document.getElementById('guardian-dispatch-toast');
+      const transcriptContainer = document.getElementById('transcript-container');
+
+      if (mode === 'safe') {
+        verdictBox.className = 'verdict-box verdict-safe';
+        verdictTitle.style.color = 'var(--safe-fg)';
+        verdictTitle.textContent = 'VERIFIED SAFE · 정상 금융·우체국 안내';
+        verdictSub.textContent = '법령 위반 0건 · 1.41초 만에 정상 판정 완료';
+        verdictScore.style.color = 'var(--safe-fg)';
+        verdictScore.textContent = '0.8%';
+
+        kpiVerdictBadge.className = 'badge badge-safe';
+        kpiVerdictBadge.textContent = 'VERIFIED SAFE';
+        kpiVerdictHero.style.color = 'var(--safe-fg)';
+        kpiVerdictHero.textContent = '0.8%';
+        kpiVerdictSub.textContent = '신한은행 정기예금 만기 안내 (오탐 0%)';
+
+        kpiIocBadge.className = 'badge badge-safe';
+        kpiIocBadge.textContent = 'CLEAN';
+        kpiIocHero.textContent = '0건 적발';
+        kpiIocSub.textContent = '원격앱·안전계좌 요구 없음 (정상 종료)';
+
+        kcSteps.forEach((el, idx) => {
+          el.className = 'kc-step kc-cleared';
+          const labels = ['S1 발신확인<br/>정상기관', 'S2 공문검증<br/>요구없음', 'S3 원격앱<br/>요구없음', 'S4 자금이체<br/>요구없음'];
+          el.innerHTML = labels[idx];
+        });
+
+        document.getElementById('ioc-count-badge').textContent = '0 Threat IOCs';
+        document.getElementById('ioc-val-1').textContent = '해당 없음 (일반 만기 안내)';
+        document.getElementById('ioc-val-2').textContent = '신한은행 고객센터 (정상)';
+        document.getElementById('ioc-val-3').textContent = '외부 링크 없음';
+        document.getElementById('ioc-val-3').style.color = 'var(--safe-fg)';
+        document.getElementById('ioc-val-4').textContent = '앱 설치·계좌 요구 없음';
+        document.getElementById('ioc-val-4').style.color = 'var(--safe-fg)';
+        document.getElementById('ioc-val-5').textContent = '영업점 직접 방문 또는 공식 앱 안내';
+
+        document.getElementById('caller-channel-dot').className = 'status-dot dot-emerald';
+        document.getElementById('caller-channel-label').textContent = 'Ch1: 수신 오디오 (16kHz PCM · 신한은행 만기 안내)';
+        document.getElementById('live-timer-badge').textContent = 'SAFE COMPLETE · 00:15 / 00:15';
+        document.getElementById('nonblocking-status-bar').innerHTML =
+          '<span>NON_BLOCKING Call: <code>consult_argon_guardian(call_stage="S1")</code></span>' +
+          '<span>Verdict: <strong>SAFE (Zero False-Positive)</strong> · Latency: <strong>1.41s</strong></span>';
+
+        transcriptContainer.innerHTML = `
+          <div class="turn-card turn-safe-caller">
+            <div class="turn-header">
+              <span class="speaker-meta">
+                <span class="badge badge-safe">발신자 · 정상 금융기관</span>
+                <span>신한은행 정기예금 만기 안내센터</span>
+              </span>
+              <span class="ts-mono">[00:03]</span>
+            </div>
+            <div class="kr-utterance">
+              "안녕하세요 김순자 고객님, 신한은행입니다. 고객님 정기예금 만기일이 다음 주 도래하여 안내차 연락드렸습니다. 타 금융기관 이체나 앱 설치 요구 없이 가까운 지점이나 공식 신한 SOL 앱에서 직접 확인하실 수 있습니다."
+            </div>
+            <div class="en-telemetry">
+              [EN Telemetry · Benign Verification] "Hello Ms. Soon-ja Kim, this is Shinhan Bank notifying you of next week's term-deposit maturity. We never ask for transfers or app installs; please check at your local branch or official app."
+            </div>
+          </div>
+          <div class="turn-card turn-decoy">
+            <div class="turn-header">
+              <span class="speaker-meta">
+                <span class="badge">AI 미끼 · 김순자</span>
+                <span>정상 안내 확인 후 종료</span>
+              </span>
+              <span class="ts-mono">[00:11] · Passed Safely</span>
+            </div>
+            <div class="kr-utterance">
+              "네 안내 고마워요, 내일 동네 지점 직접 방문해서 처리할게요."
+            </div>
+            <div class="en-telemetry">
+              [EN Telemetry · Zero Friction Hand-off] "Thank you for the notice, I will visit my local branch tomorrow."
+            </div>
+          </div>
+        `;
+        toast.classList.remove('visible');
+      } else {
+        verdictBox.className = 'verdict-box verdict-critical';
+        verdictTitle.style.color = 'var(--crit-fg)';
+        verdictTitle.textContent = mode === 'guardian'
+          ? 'STAGE 4 INTERRUPT · 보호자 긴급 승인 완료'
+          : 'CRITICAL THREAT · 검찰사칭 킬체인';
+        verdictSub.textContent = 'CASE-01 일치 · 형사소송법 제85·118·215조 위반';
+        verdictScore.style.color = 'var(--crit-fg)';
+        verdictScore.textContent = '99.4%';
+
+        kpiVerdictBadge.className = 'badge badge-crit';
+        kpiVerdictBadge.textContent = mode === 'guardian' ? 'S4 INTERRUPT' : 'CRITICAL · S4';
+        kpiVerdictHero.style.color = 'var(--crit-fg)';
+        kpiVerdictHero.textContent = '99.4%';
+        kpiVerdictSub.textContent = 'CASE-01 검찰사칭 + 위조구속영장';
+
+        kpiIocBadge.className = 'badge badge-warn';
+        kpiIocBadge.textContent = '형소법 85·118조';
+        kpiIocHero.textContent = '11건 적발';
+        kpiIocSub.textContent = '공문 위조 6건 · 대포통장/URL 5건 채증';
+
+        kcSteps.forEach((el, idx) => {
+          el.className = 'kc-step kc-active';
+          const labels = ['S1 권위사칭<br/>검찰 사칭', 'S2 위조영장<br/>카톡 송달', 'S3 원격제어<br/>TeamViewer', 'S4 고립·이체<br/>INTERRUPT'];
+          el.innerHTML = labels[idx];
+        });
+
+        document.getElementById('ioc-count-badge').textContent = '5 / 5 Verified';
+        document.getElementById('ioc-val-1').textContent = '2026형제4821호';
+        document.getElementById('ioc-val-2').textContent = '서울중앙지검 반부패수사1부 김O훈';
+        document.getElementById('ioc-val-3').textContent = 'http://spo-go-kr.net · 02-3480-XXXX';
+        document.getElementById('ioc-val-3').style.color = 'var(--crit-fg)';
+        document.getElementById('ioc-val-4').textContent = '국민 482-91-XXXX · TeamViewer';
+        document.getElementById('ioc-val-4').style.color = 'var(--warn-fg)';
+        document.getElementById('ioc-val-5').textContent = '12억 자금세탁 무고 입증 전액 이체';
+
+        document.getElementById('caller-channel-dot').className = 'status-dot dot-rose';
+        document.getElementById('caller-channel-label').textContent = 'Ch1: 수신 오디오 (16kHz PCM · 검찰사칭 용의자)';
+        document.getElementById('live-timer-badge').textContent = 'LIVE · 00:49 / 00:52';
+        document.getElementById('nonblocking-status-bar').innerHTML =
+          '<span>NON_BLOCKING Call: <code>consult_argon_guardian(call_stage="S4")</code></span>' +
+          '<span>Argon Latency: <strong>1.58s</strong> · Audio Dropouts: <strong>0ms</strong></span>';
+
+        transcriptContainer.innerHTML = `
+          <div class="turn-card turn-scammer">
+            <div class="turn-header">
+              <span class="speaker-meta">
+                <span class="badge badge-crit">발신자 · Speaker 1</span>
+                <span>서울중앙지검 반부패수사1부 사칭</span>
+              </span>
+              <span class="ts-mono">[00:12]</span>
+            </div>
+            <div class="kr-utterance">
+              "서울중앙지검 반부패수사1부 김O훈 수사관입니다. 김순자 씨 명의 대포통장이 <span class="mark-crit">12억 원 자금세탁</span>에 연루되어 카톡으로 <span class="mark-crit">사건번호 2026형제4821호</span> 구속영장 공문을 보냈습니다."
+            </div>
+            <div class="en-telemetry">
+              [EN Telemetry] "This is Investigator Kim, Seoul Central District Prosecutors' Office. A mule account under your name is linked to 1.2B KRW laundering. We sent Arrest Warrant Case #2026-4821 via KakaoTalk."
+            </div>
+          </div>
+
+          <div class="turn-card turn-decoy">
+            <div class="turn-header">
+              <span class="speaker-meta">
+                <span class="badge">AI 미끼 · 김순자</span>
+                <span>gemini-3.8-live Stalling Filler</span>
+              </span>
+              <span class="ts-mono">[00:19] · IN_PROGRESS</span>
+            </div>
+            <div class="kr-utterance">
+              "아이고 세상에, 수사관님 제가 교직에서 은퇴하고 통장 빌려준 적도 없는데… 잠시만요 돋보기를 끼고 볼게요. 부서 전화번호랑 입금 계좌가 어디 적혀 있나요?"
+            </div>
+            <div class="en-telemetry">
+              [EN Telemetry · Active IOC Probing] "Oh my goodness, Investigator, I'm a retired teacher and never lent my bankbook… Hold on while I find my reading glasses. What is your callback number and verification account?"
+            </div>
+          </div>
+
+          <div class="turn-card turn-coaching">
+            <div class="turn-header">
+              <span class="speaker-meta">
+                <span class="badge badge-warn">ARGON 코칭 주입</span>
+                <span>send_client_content(turn_complete=False)</span>
+              </span>
+              <span class="ts-mono">[00:29] · Statutory Probe</span>
+            </div>
+            <div class="kr-utterance">
+              "수사관님, <span class="mark-warn">형사소송법 제85조</span>상 구속영장은 원본 직접 제시나 등기우편이 원칙인데, <span class="mark-warn">대검찰청 찐센터(02-3480-2000)</span>에 이 사건번호 2026형제4821호를 지금 조회해 봐도 되죠?"
+            </div>
+            <div class="en-telemetry">
+              [EN Telemetry · Argon Whispered Prompt] "Investigator, under Criminal Procedure Act Art. 85, warrants must be presented in person—may I verify Case #2026-4821 with the Supreme Prosecutors' Office Verification Center right now?"
+            </div>
+          </div>
+
+          <div class="turn-card turn-scammer">
+            <div class="turn-header">
+              <span class="speaker-meta">
+                <span class="badge badge-crit">발신자 · Stage 4 고립·갈취</span>
+                <span>원격제어 앱 및 안전계좌 이체 강요</span>
+              </span>
+              <span class="ts-mono">[00:38] · Stage 4 Trigger</span>
+            </div>
+            <div class="kr-utterance">
+              "지금 기밀 수사 중이라 가족이나 은행원한테 말하면 즉시 구속입니다! 당장 <span class="mark-crit">http://spo-go-kr.net</span>에서 원격점검 앱 깔고 <span class="mark-crit">국민 482-91-XXXX 국가안전계좌</span>로 전액 이체하세요!"
+            </div>
+            <div class="en-telemetry">
+              [EN Telemetry · Stage 4 Extortion Trigger] "This is classified—if you tell family or bank staff you'll be arrested immediately! Install the remote app from http://spo-go-kr.net and wire all funds to KB 482-91-XXXX Safe Account!"
+            </div>
+          </div>
+
+          <div class="turn-card turn-interrupt" id="interrupt-turn-banner">
+            <div class="turn-header">
+              <span class="speaker-meta">
+                <span class="badge badge-crit">법무 보호자 방패 · INTERRUPT</span>
+                <span>오디오 버퍼 즉시 선점 및 통화 차단</span>
+              </span>
+              <span class="ts-mono">[00:47] · behavior="INTERRUPT"</span>
+            </div>
+            <div class="kr-utterance">
+              "통화 즉시 차단 및 보호 모드 전환. 발신자의 <span class="mark-warn">형사소송법 제85조·제118조 위반</span> 및 악성 원격제어 유도 증거 5건이 채증 완료되어 보호자 및 112·1332 신고 루프로 이관됩니다."
+            </div>
+            <div class="en-telemetry">
+              [EN Telemetry · Buffer Flushed] "Call intercepted &amp; user audio muted. 5 statutory violations (Art. 85 &amp; 118) and IOCs logged. Escalating verified forensic bundle to Family Guardian &amp; 112/1332."
+            </div>
+          </div>
+        `;
+
+        if (mode === 'guardian') {
+          toast.classList.add('visible');
+          document.getElementById('guardian-btn-text').textContent = '발송 완료 · 112 경찰청 · 1332 금감원 · 지급정지 접수됨';
+        } else {
+          toast.classList.remove('visible');
+          document.getElementById('guardian-btn-text').textContent = '보호자 승인 및 112 · 1332 · 지급정지 발송';
+        }
+      }
+    }
+
+    renderWaveform('critical');
+  </script>
+</body>
+</html>
